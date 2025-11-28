@@ -4,10 +4,10 @@ This repository contains a portable, reproducible setup for AI-assisted developm
 
 ## Quick Start
 
-Run the automated setup script:
+Run the automated setup wrapper (runs all installers):
 
 ```bash
-./scripts/install-opencode.sh
+bash configure-coding-environment.sh
 ```
 
 Then reload your shell:
@@ -21,7 +21,10 @@ Verify everything works:
 ```bash
 opencode --version
 specify --version
+docker --version
 ```
+
+**Note**: See [SESSION.md](SESSION.md) for current session state, known issues, and troubleshooting.
 
 ## What's Included
 
@@ -48,7 +51,14 @@ See [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json).
 
 ## Installation Features
 
-The install script automatically:
+The install wrapper (`configure-coding-environment.sh`) automatically runs these focused scripts:
+
+- **`scripts/install-prereqs.sh`** — Detects OS, installs Homebrew/package manager, curl, Docker, VS Code Insiders
+- **`scripts/install-opencode.sh`** — Installs OpenCode TUI and VS Code extension
+- **`scripts/install-spec-kit.sh`** — Installs uv package manager and specify-cli
+- **`scripts/configure-env.sh`** — Updates shell configuration (PATH for uv tools)
+
+Features:
 - ✅ Detects your OS (macOS, Debian/Ubuntu, Fedora/RHEL)
 - ✅ Installs Homebrew (macOS) or uses native package manager (Linux)
 - ✅ Installs Docker
@@ -58,19 +68,25 @@ The install script automatically:
 - ✅ Installs `uv` package manager
 - ✅ Installs Spec-Kit CLI (`specify`)
 - ✅ Updates shell configuration (`.zshrc`, `.bashrc`)
+- ✅ All scripts are idempotent (safe to run multiple times)
 
 ## File Structure
 
 ```
 personal/
-├── README.md                           # This file
+├── README.md                           # Quick-start and overview
+├── SESSION.md                          # Current session state and bootstrap guide
 ├── README-opencode.md                  # OpenCode TUI + GUI setup guide
 ├── README-spec-kit.md                  # Spec-Driven Development guide
 ├── opencode-spec-kit-session.md        # Original Copilot chat transcript
+├── configure-coding-environment.sh     # Main wrapper script (runs all installers)
 ├── .devcontainer/
 │   └── devcontainer.json               # Dev container configuration
 └── scripts/
-    └── install-opencode.sh             # Automated setup script
+    ├── install-prereqs.sh              # Prerequisites: Homebrew, curl, Docker, VS Code
+    ├── install-opencode.sh             # OpenCode TUI + extension installer
+    ├── install-spec-kit.sh             # uv + specify-cli installer
+    └── configure-env.sh                # Shell environment configuration
 ```
 
 ## Prerequisites
@@ -81,34 +97,54 @@ personal/
 
 ## Next Steps
 
-1. **Run the setup script** (first time only):
+1. **Run the setup wrapper** (first time only):
    ```bash
-   ./scripts/install-opencode.sh
+   bash configure-coding-environment.sh
+   ```
+   See [SESSION.md](SESSION.md) if issues occur.
+
+2. **Reload your shell**:
+   ```bash
+   exec zsh -l
    ```
 
-2. **Choose your workflow**:
+3. **Verify all tools**:
+   ```bash
+   opencode --version
+   specify --version
+   uv --version
+   docker --version
+   ```
+
+4. **Choose your workflow**:
    - **Option A**: Use OpenCode TUI directly in the terminal
    - **Option B**: Use OpenCode GUI in VS Code Insiders
-   - **Option C**: Use Spec-Kit for structured, specification-driven development
+   - **Option C**: Use Spec-Kit for structured, specification-driven development (recommended)
 
-3. **For Spec-Kit setup**:
+5. **For Spec-Kit setup**:
    ```bash
-   specify init my-project --ai opencode
+   specify init my-project --ai opencode --script sh
    cd my-project
    opencode
    /speckit.constitution
    ```
 
-4. **For dev container development**:
+6. **For dev container development**:
    - Open this repo in VS Code Insiders
    - Use "Dev Containers: Reopen in Container"
 
+See [README-spec-kit.md](README-spec-kit.md) for full Spec-Driven Development workflow.
+
 ## Troubleshooting
 
+See [SESSION.md](SESSION.md) for detailed troubleshooting of known issues.
+
+Quick fixes:
 - **Shell reload**: After running the script, reload your shell with `exec zsh -l`
-- **OpenCode not found**: Ensure `.zshrc` was updated; try `source ~/.zshrc`
+- **OpenCode not found**: Ensure `~/.zshrc` was updated; try `source ~/.zshrc` then `exec zsh -l`
 - **VS Code extension not installed**: Run `code-insiders --install-extension tanishqkancharla.opencode-vscode --force`
-- **specify not found**: Verify `uv` is installed with `uv --version` and on PATH
+- **specify not found**: Verify `uv` is installed with `uv --version` and on PATH; reload shell
+- **Docker not starting**: Manually start Docker Desktop (Applications folder)
 
 ## Resources
 
@@ -119,5 +155,6 @@ personal/
 
 ---
 
-**Last Updated**: 2025-11-28
-**Setup Tested On**: macOS 14+ with Apple Silicon
+**Last Updated**: 2025-11-28  
+**Setup Status**: Refactored and in progress (see [SESSION.md](SESSION.md))  
+**Tested On**: macOS 14+ with Apple Silicon

@@ -51,8 +51,11 @@ uv tool install specify-cli --force --from git+https://github.com/github/spec-ki
 Create a new project or initialize in the current directory:
 
 ```bash
-# Create new project directory
-specify init my-project --ai opencode
+# Create new project directory (with interactive prompts)
+specify init my-project
+
+# Skip interactive prompts by specifying options directly
+specify init my-project --ai opencode --script sh
 
 # Or initialize in current directory
 specify init . --ai opencode
@@ -61,6 +64,23 @@ specify init --here --ai opencode
 
 # Force merge if directory has files (skip confirmation)
 specify init . --force --ai opencode
+```
+
+#### Interactive Prompts
+
+When you run `specify init` without flags, you'll be prompted to select:
+
+1. **AI Agent** - Choose from: `claude`, `gemini`, `copilot`, `opencode`, `cursor-agent`, `windsurf`, `qwen`, `codex`, and others
+   - **For this setup**: Select `opencode`
+
+2. **Script Type** - Choose from: `sh` (bash/zsh) or `ps` (PowerShell)
+   - **For macOS/Linux**: Select `sh`
+   - **For Windows**: Select `ps`
+
+**Recommended (non-interactive):**
+
+```bash
+specify init my-project --ai opencode --script sh
 ```
 
 The CLI will:
