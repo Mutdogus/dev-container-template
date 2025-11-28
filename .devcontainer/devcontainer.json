@@ -1,0 +1,20 @@
+{
+  "name": "Spec-kit / OpenCode Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/python:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "tanishqkancharla.opencode-vscode",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-ssh"
+      ]
+    }
+  },
+  "forwardPorts": [3000, 8000, 5432],
+  "postCreateCommand": "bash -lc \"python --version && pip install -r requirements.txt 2>/dev/null || true\"",
+  "remoteUser": "vscode"
+}
