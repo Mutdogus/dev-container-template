@@ -1,5 +1,10 @@
-import { VSCodeTestResult, TestMetrics } from '@vscode/types';
-import { TestResultFactory } from './test-result';
+import {
+  VSCodeTestResult,
+  TestMetrics,
+  ContainerValidation,
+  ExtensionStatus,
+  EnvironmentCheck,
+} from './index';
 
 /**
  * Test result models for VS Code testing
@@ -289,7 +294,7 @@ export class ContainerStateBuilder {
       this.state.resourceUsage = {
         memory: { used: 0, limit: 0, warningThreshold: 2048 },
         cpu: { usage: 0, cores: 0 },
-        disk: { used: 0, available: 0 }
+        disk: { used: 0, available: 0 },
       };
     }
 
@@ -390,7 +395,7 @@ export class ExtensionStatusBuilder {
         vscodeVersion: 'unknown',
         isCompatible: true,
         issues: [],
-        warnings: []
+        warnings: [],
       };
     }
     this.extension.compatibility.issues!.push(issue);
@@ -407,7 +412,7 @@ export class ExtensionStatusBuilder {
         vscodeVersion: 'unknown',
         isCompatible: true,
         issues: [],
-        warnings: []
+        warnings: [],
       };
     }
     this.extension.compatibility.warnings!.push(warning);
@@ -496,7 +501,11 @@ export class EnvironmentCheckBuilder {
   /**
    * Mark check as failed
    */
-  public setFailed(message: string, details?: Record<string, any>, executionTime?: number): EnvironmentCheckBuilder {
+  public setFailed(
+    message: string,
+    details?: Record<string, any>,
+    executionTime?: number
+  ): EnvironmentCheckBuilder {
     this.check.status = 'failed';
     this.check.message = message;
     if (details) {
@@ -511,7 +520,11 @@ export class EnvironmentCheckBuilder {
   /**
    * Mark check as warning
    */
-  public setWarning(message: string, details?: Record<string, any>, executionTime?: number): EnvironmentCheckBuilder {
+  public setWarning(
+    message: string,
+    details?: Record<string, any>,
+    executionTime?: number
+  ): EnvironmentCheckBuilder {
     this.check.status = 'warning';
     this.check.message = message;
     if (details) {

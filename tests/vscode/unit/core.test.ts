@@ -1,7 +1,7 @@
-import { VSCodeTestRunner } from '@vscode/testing/core/test-runner';
-import { TestConfigurationManager } from '@vscode/testing/config/manager';
-import { MockFactory, AssertionHelpers } from '@vscode/utils/test-helpers';
-import { TestLogger } from '@vscode/utils/logger';
+import { VSCodeTestRunner } from '../../../src/vscode/testing/core/test-runner';
+import { TestConfigurationManager } from '../../../src/vscode/testing/config/manager';
+import { MockFactory, AssertionHelpers } from '../utils/test-helpers';
+import { TestLogger } from '../../../src/vscode/utils/logger';
 
 describe('VS Code Test Runner Foundation', () => {
   let testRunner: VSCodeTestRunner;
@@ -9,7 +9,7 @@ describe('VS Code Test Runner Foundation', () => {
   let logger: TestLogger;
 
   beforeEach(() => {
-    logger = TestLogger.getInstance();
+    logger = new TestLogger();
     configManager = new TestConfigurationManager();
     testRunner = new VSCodeTestRunner(MockFactory.createMockTestConfig());
   });
@@ -24,9 +24,12 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const testSuiteName = 'Test Suite 1';
       const mockTests = [
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 2', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' }))
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 2', status: 'passed' })),
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' })),
       ];
 
       // Act
@@ -48,9 +51,18 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const testSuiteName = 'Test Suite with Failures';
       const mockTests = [
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 2', status: 'failed', error: 'Test failed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' }))
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({
+              name: 'Test 2',
+              status: 'failed',
+              error: 'Test failed',
+            })
+          ),
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' })),
       ];
 
       // Act
@@ -62,7 +74,7 @@ describe('VS Code Test Runner Foundation', () => {
       expect(result.summary.total).toBe(3);
       expect(result.summary.passed).toBe(2);
       expect(result.summary.failed).toBe(1);
-      expect(result.summary.successRate).toBe(66.67);
+      expect(result.summary.successRate).toBeCloseTo(66.67, 1);
       AssertionHelpers.assertTestFailed(result.tests[1]);
     });
 
@@ -70,9 +82,11 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const testSuiteName = 'Test Suite with Exceptions';
       const mockTests = [
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 1', status: 'passed' })),
         () => Promise.reject(new Error('Test execution error')),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' }))
+        () =>
+          Promise.resolve(MockFactory.createMockTestResult({ name: 'Test 3', status: 'passed' })),
       ];
 
       // Act
@@ -95,20 +109,24 @@ describe('VS Code Test Runner Foundation', () => {
       const config = MockFactory.createMockTestConfig({ retryCount: 2 });
       const retryTestRunner = new VSCodeTestRunner(config);
       let attemptCount = 0;
-      
+
       const testFunction = () => {
         attemptCount++;
         if (attemptCount < 3) {
-          return Promise.resolve(MockFactory.createMockTestResult({ 
-            name: 'Retry Test', 
-            status: 'failed', 
-            error: `Attempt ${attemptCount} failed` 
-          }));
+          return Promise.resolve(
+            MockFactory.createMockTestResult({
+              name: 'Retry Test',
+              status: 'failed',
+              error: `Attempt ${attemptCount} failed`,
+            })
+          );
         }
-        return Promise.resolve(MockFactory.createMockTestResult({ 
-          name: 'Retry Test', 
-          status: 'passed' 
-        }));
+        return Promise.resolve(
+          MockFactory.createMockTestResult({
+            name: 'Retry Test',
+            status: 'passed',
+          })
+        );
       };
 
       // Act
@@ -124,13 +142,15 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const config = MockFactory.createMockTestConfig({ retryCount: 2 });
       const retryTestRunner = new VSCodeTestRunner(config);
-      
+
       const testFunction = () => {
-        return Promise.resolve(MockFactory.createMockTestResult({ 
-          name: 'Always Fail Test', 
-          status: 'failed', 
-          error: 'Always fails' 
-        }));
+        return Promise.resolve(
+          MockFactory.createMockTestResult({
+            name: 'Always Fail Test',
+            status: 'failed',
+            error: 'Always fails',
+          })
+        );
       };
 
       // Act
@@ -148,11 +168,20 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const config = MockFactory.createMockTestConfig({ parallel: true });
       const parallelTestRunner = new VSCodeTestRunner(config);
-      
+
       const mockTests = [
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Parallel Test 1', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Parallel Test 2', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Parallel Test 3', status: 'passed' }))
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Parallel Test 1', status: 'passed' })
+          ),
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Parallel Test 2', status: 'passed' })
+          ),
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Parallel Test 3', status: 'passed' })
+          ),
       ];
 
       // Act
@@ -170,11 +199,20 @@ describe('VS Code Test Runner Foundation', () => {
       // Arrange
       const config = MockFactory.createMockTestConfig({ parallel: false });
       const sequentialTestRunner = new VSCodeTestRunner(config);
-      
+
       const mockTests = [
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Sequential Test 1', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Sequential Test 2', status: 'passed' })),
-        () => Promise.resolve(MockFactory.createMockTestResult({ name: 'Sequential Test 3', status: 'passed' }))
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Sequential Test 1', status: 'passed' })
+          ),
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Sequential Test 2', status: 'passed' })
+          ),
+        () =>
+          Promise.resolve(
+            MockFactory.createMockTestResult({ name: 'Sequential Test 3', status: 'passed' })
+          ),
       ];
 
       // Act

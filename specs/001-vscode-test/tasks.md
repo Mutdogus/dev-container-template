@@ -1,6 +1,5 @@
 ---
-
-description: "Task list template for feature implementation"
+description: 'Task list template for feature implementation'
 ---
 
 # Tasks: VS Code Testing Integration
@@ -98,9 +97,9 @@ description: "Task list template for feature implementation"
 
 ### Tests for User Story 2 (REQUIRED by constitution)
 
-- [ ] T032 [P] [US2] Unit test for extension loader in tests/vscode/unit/extension-loader.test.ts
-- [ ] T033 [P] [US2] Unit test for extension compatibility checker in tests/vscode/unit/extension-compatibility.test.ts
-- [ ] T034 [P] [US2] Integration test for extension functionality in tests/vscode/integration/extension-functionality.test.ts
+- [x] T032 [P] [US2] Unit test for extension loader in tests/vscode/unit/extension-loader.test.ts
+- [x] T033 [P] [US2] Unit test for extension compatibility checker in tests/vscode/unit/extension-compatibility.test.ts
+- [x] T034 [P] [US2] Integration test for extension functionality in tests/vscode/integration/extension-functionality.test.ts
 - [ ] T035 [P] [US2] Integration test for multi-version extension support in tests/vscode/integration/version-compatibility.test.ts
 
 ### Implementation for User Story 2

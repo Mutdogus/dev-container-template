@@ -1,6 +1,10 @@
-import { TestConfiguration, ContainerConfig } from '@vscode/types';
-import { DiagnosticLogger } from '@vscode/utils/diagnostics';
-import { VSCodeTestUtils } from '@vscode/utils/helpers';
+import {
+  TestConfiguration,
+  ContainerConfig,
+  PartialTestConfiguration,
+  PartialContainerConfig,
+} from '../../types';
+import { DiagnosticLogger } from '../../utils/diagnostic-logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -29,24 +33,33 @@ export class TestConfigurationManager {
 
     // Load from environment variables
     const envConfig = this.loadFromEnvironment();
-    
+
     // Load from config file if exists
     const fileConfig = await this.loadFromFile();
-    
+
     // Merge configurations (env vars take precedence)
-    const mergedConfig = { ...this.defaultConfig, ...fileConfig, ...envConfig };
-    
+    const mergedConfig: TestConfiguration = {
+      ...this.defaultConfig,
+      ...fileConfig,
+      ...envConfig,
+      containerConfig: {
+        ...this.defaultConfig.containerConfig,
+        ...fileConfig.containerConfig,
+        ...envConfig.containerConfig,
+      },
+    };
+
     // Validate configuration
     this.validateConfiguration(mergedConfig);
-    
+
     // Store current configuration
     this.currentConfig = mergedConfig;
-    
+
     this.logger.info('Test configuration loaded successfully', 'config-manager', {
       vscodeVersions: mergedConfig.vscodeVersions,
       timeout: mergedConfig.timeout,
       parallel: mergedConfig.parallel,
-      memoryThreshold: mergedConfig.memoryThreshold
+      memoryThreshold: mergedConfig.memoryThreshold,
     });
 
     return mergedConfig;
@@ -60,14 +73,13 @@ export class TestConfigurationManager {
       const configContent = this.formatConfigForFile(config);
       await this.ensureConfigDirectory();
       await fs.writeFile(this.configPath, configContent, 'utf-8');
-      
-      this.logger.info('Configuration saved to file', 'config-manager', { 
-        path: this.configPath 
+
+      this.logger.info('Configuration saved to file', 'config-manager', {
+        path: this.configPath,
       });
-      
+
       // Update current configuration
       this.currentConfig = { ...config };
-      
     } catch (error) {
       this.logger.error(`Failed to save configuration: ${error}`, 'config-manager');
       throw error;
@@ -87,12 +99,12 @@ export class TestConfigurationManager {
   public updateConfiguration(updates: Partial<TestConfiguration>): TestConfiguration {
     const updatedConfig = { ...this.currentConfig, ...updates };
     this.currentConfig = updatedConfig;
-    
-    this.logger.info('Configuration updated', 'config-manager', { 
+
+    this.logger.info('Configuration updated', 'config-manager', {
       updates,
-      newConfig: updatedConfig 
+      newConfig: updatedConfig,
     });
-    
+
     return updatedConfig;
   }
 
@@ -101,7 +113,7 @@ export class TestConfigurationManager {
    */
   public getConfigurationForVersion(vscodeVersion: string): TestConfiguration {
     const baseConfig = { ...this.currentConfig };
-    
+
     // Version-specific overrides
     switch (vscodeVersion) {
       case 'insiders':
@@ -121,7 +133,7 @@ export class TestConfigurationManager {
     this.logger.info('Configuration retrieved for version', 'config-manager', {
       vscodeVersion,
       timeout: baseConfig.timeout,
-      parallel: baseConfig.parallel
+      parallel: baseConfig.parallel,
     });
 
     return baseConfig;
@@ -152,7 +164,8 @@ export class TestConfigurationManager {
       errors.push('Test timeout must be greater than 0');
     }
 
-    if (config.timeout > 600000) { // 10 minutes max
+    if (config.timeout > 600000) {
+      // 10 minutes max
       warnings.push('Test timeout is very long (>10 minutes)');
     }
 
@@ -170,11 +183,13 @@ export class TestConfigurationManager {
       errors.push('Memory threshold must be greater than 0');
     }
 
-    if (config.memoryThreshold < 512) { // Less than 512MB
+    if (config.memoryThreshold < 512) {
+      // Less than 512MB
       warnings.push('Memory threshold is very low (<512MB)');
     }
 
-    if (config.memoryThreshold > 8192) { // More than 8GB
+    if (config.memoryThreshold > 8192) {
+      // More than 8GB
       warnings.push('Memory threshold is very high (>8GB)');
     }
 
@@ -196,7 +211,8 @@ export class TestConfigurationManager {
       errors.push('Container timeout must be greater than 0');
     }
 
-    if (config.containerConfig.timeout && config.containerConfig.timeout > 1800000) { // 30 minutes max
+    if (config.containerConfig.timeout && config.containerConfig.timeout > 1800000) {
+      // 30 minutes max
       warnings.push('Container timeout is very long (>30 minutes)');
     }
 
@@ -206,7 +222,7 @@ export class TestConfigurationManager {
         if (typeof value !== 'string') {
           errors.push(`Environment variable ${key} must be a string`);
         }
-        
+
         if (key.includes(' ') || key.includes('=') || value.includes('\n')) {
           warnings.push(`Environment variable ${key} contains potentially problematic characters`);
         }
@@ -219,7 +235,7 @@ export class TestConfigurationManager {
         if (typeof volume !== 'string') {
           errors.push(`Volume path must be a string: ${volume}`);
         }
-        
+
         // Check for potentially dangerous volume paths
         if (volume.includes('/') && !volume.startsWith('/tmp') && !volume.startsWith('/var/tmp')) {
           warnings.push(`Volume path may be dangerous: ${volume}`);
@@ -230,17 +246,17 @@ export class TestConfigurationManager {
     // Validate ports
     if (config.containerConfig.ports) {
       for (const [containerPort, hostPort] of Object.entries(config.containerConfig.ports)) {
-        const containerPortNum = parseInt(containerPort);
-        const hostPortNum = parseInt(hostPort);
-        
+        const containerPortNum = parseInt(containerPort!);
+        const hostPortNum = parseInt(String(hostPort));
+
         if (isNaN(containerPortNum) || containerPortNum < 1 || containerPortNum > 65535) {
           errors.push(`Invalid container port: ${containerPort}`);
         }
-        
+
         if (isNaN(hostPortNum) || hostPortNum < 1 || hostPortNum > 65535) {
-          errors.push(`Invalid host port: ${hostPort}`);
+          errors.push(`Invalid host port: ${String(hostPort)}`);
         }
-        
+
         // Check for commonly used ports that might conflict
         const commonPorts = [22, 80, 443, 8080, 3000, 8081];
         if (commonPorts.includes(hostPortNum)) {
@@ -250,7 +266,7 @@ export class TestConfigurationManager {
     }
 
     const isValid = errors.length === 0;
-    
+
     if (isValid) {
       this.logger.info('Configuration validation passed', 'config-manager');
     } else {
@@ -263,7 +279,9 @@ export class TestConfigurationManager {
   /**
    * Get effective timeout for a given test type
    */
-  public getTimeoutForTestType(testType: 'container' | 'extension' | 'environment' | 'integration'): number {
+  public getTimeoutForTestType(
+    testType: 'container' | 'extension' | 'environment' | 'integration'
+  ): number {
     switch (testType) {
       case 'container':
         return this.currentConfig.containerConfig.timeout;
@@ -313,8 +331,8 @@ export class TestConfigurationManager {
       ...overrides,
       containerConfig: {
         ...this.currentConfig.containerConfig,
-        ...overrides.containerConfig
-      }
+        ...overrides.containerConfig,
+      },
     };
   }
 
@@ -334,7 +352,7 @@ export class TestConfigurationManager {
     const exportData = {
       exportTime: new Date().toISOString(),
       configuration: this.currentConfig,
-      validation: this.validateConfiguration(this.currentConfig)
+      validation: this.validateConfiguration(this.currentConfig),
     };
 
     return JSON.stringify(exportData, null, 2);
@@ -346,17 +364,16 @@ export class TestConfigurationManager {
   public importConfiguration(jsonConfig: string): TestConfiguration {
     try {
       const config = JSON.parse(jsonConfig);
-      
+
       if (!this.isValidConfigurationFormat(config)) {
         throw new Error('Invalid configuration format');
       }
 
       this.validateConfiguration(config);
       this.currentConfig = { ...this.defaultConfig, ...config };
-      
+
       this.logger.info('Configuration imported successfully', 'config-manager');
       return this.currentConfig;
-
     } catch (error) {
       this.logger.error(`Failed to import configuration: ${error}`, 'config-manager');
       throw error;
@@ -366,64 +383,60 @@ export class TestConfigurationManager {
   /**
    * Load configuration from environment variables
    */
-  private loadFromEnvironment(): Partial<TestConfiguration> {
-    const env: Partial<TestConfiguration> = {};
+  private loadFromEnvironment(): PartialTestConfiguration {
+    const envConfig: Partial<TestConfiguration> = {};
 
     // VS Code versions
     if (process.env.VSCODE_VERSIONS) {
-      env.vscodeVersions = process.env.VSCODE_VERSIONS.split(',').map(v => v.trim());
+      envConfig.vscodeVersions = process.env.VSCODE_VERSIONS.split(',').map(v => v.trim());
     }
 
     // Test configuration
     if (process.env.TEST_TIMEOUT) {
-      env.timeout = parseInt(process.env.TEST_TIMEOUT, 10);
+      envConfig.timeout = parseInt(process.env.TEST_TIMEOUT, 10);
     }
 
     if (process.env.TEST_PARALLEL) {
-      env.parallel = process.env.TEST_PARALLEL === 'true';
+      envConfig.parallel = process.env.TEST_PARALLEL === 'true';
     }
 
     if (process.env.TEST_RETRY_COUNT) {
-      env.retryCount = parseInt(process.env.TEST_RETRY_COUNT, 10);
+      envConfig.retryCount = parseInt(process.env.TEST_RETRY_COUNT, 10);
     }
 
     // Performance thresholds
     if (process.env.MEMORY_WARNING_THRESHOLD_GB) {
-      env.memoryThreshold = parseFloat(process.env.MEMORY_WARNING_THRESHOLD_GB) * 1024; // Convert GB to MB
+      envConfig.memoryThreshold = parseFloat(process.env.MEMORY_WARNING_THRESHOLD_GB) * 1024; // Convert GB to MB
     }
 
     // Container configuration
     if (process.env.CONTAINER_IMAGE) {
-      if (!env.containerConfig) {
-        env.containerConfig = {};
-      }
-      env.containerConfig.image = process.env.CONTAINER_IMAGE;
+      envConfig.containerConfig = envConfig.containerConfig || {};
+      envConfig.containerConfig.image = process.env.CONTAINER_IMAGE;
     }
 
     if (process.env.CONTAINER_NAME) {
-      if (!env.containerConfig) {
-        env.containerConfig = {};
-      }
-      env.containerConfig.name = process.env.CONTAINER_NAME;
+      envConfig.containerConfig = envConfig.containerConfig || {};
+      envConfig.containerConfig.name = process.env.CONTAINER_NAME;
     }
 
     if (process.env.CONTAINER_STARTUP_TIMEOUT_MS) {
-      if (!env.containerConfig) {
-        env.containerConfig = {};
-      }
-      env.containerConfig.timeout = parseInt(process.env.CONTAINER_STARTUP_TIMEOUT_MS, 10);
+      envConfig.containerConfig = envConfig.containerConfig || {};
+      envConfig.containerConfig.timeout = parseInt(process.env.CONTAINER_STARTUP_TIMEOUT_MS, 10);
     }
 
-    return env;
+    return envConfig;
   }
 
   /**
    * Load configuration from file
    */
-  private async loadFromFile(): Promise<Partial<TestConfiguration>> {
+  private async loadFromFile(): Promise<PartialTestConfiguration> {
     try {
       const configContent = await fs.readFile(this.configPath, 'utf-8');
-      const config: Partial<TestConfiguration> = {};
+      const config: Partial<TestConfiguration> = {
+        containerConfig: {},
+      };
 
       // Parse simple key=value format
       const lines = configContent.split('\n');
@@ -434,8 +447,8 @@ export class TestConfigurationManager {
         }
 
         const [key, value] = trimmedLine.split('=', 2);
-        const cleanKey = key.trim();
-        const cleanValue = value.trim();
+        const cleanKey = key!.trim();
+        const cleanValue = value!.trim();
 
         switch (cleanKey) {
           case 'VSCODE_VERSIONS':
@@ -454,32 +467,25 @@ export class TestConfigurationManager {
             config.memoryThreshold = parseFloat(cleanValue) * 1024;
             break;
           case 'CONTAINER_IMAGE':
-            if (!config.containerConfig) {
-              config.containerConfig = {};
-            }
+            config.containerConfig = config.containerConfig || {};
             config.containerConfig.image = cleanValue;
             break;
           case 'CONTAINER_NAME':
-            if (!config.containerConfig) {
-              config.containerConfig = {};
-            }
+            config.containerConfig = config.containerConfig || {};
             config.containerConfig.name = cleanValue;
             break;
           case 'CONTAINER_STARTUP_TIMEOUT_MS':
-            if (!config.containerConfig) {
-              config.containerConfig = {};
-            }
+            config.containerConfig = config.containerConfig || {};
             config.containerConfig.timeout = parseInt(cleanValue, 10);
             break;
         }
       }
 
-      this.logger.info('Configuration loaded from file', 'config-manager', { 
-        path: this.configPath 
+      this.logger.info('Configuration loaded from file', 'config-manager', {
+        path: this.configPath,
       });
 
       return config;
-
     } catch (error) {
       if ((error as any).code !== 'ENOENT') {
         this.logger.warning(`Failed to load config file: ${error}`, 'config-manager');
@@ -503,7 +509,7 @@ export class TestConfigurationManager {
       `CONTAINER_IMAGE=${config.containerConfig.image}`,
       `CONTAINER_NAME=${config.containerConfig.name}`,
       `CONTAINER_STARTUP_TIMEOUT_MS=${config.containerConfig.timeout}`,
-      ''
+      '',
     ];
 
     return lines.join('\n');
@@ -525,11 +531,7 @@ export class TestConfigurationManager {
    * Validate configuration format
    */
   private isValidConfigurationFormat(config: any): boolean {
-    return (
-      typeof config === 'object' &&
-      config !== null &&
-      !Array.isArray(config)
-    );
+    return typeof config === 'object' && config !== null && !Array.isArray(config);
   }
 
   /**
@@ -548,8 +550,8 @@ export class TestConfigurationManager {
         timeout: 300000, // 5 minutes
         environment: {},
         volumes: [],
-        ports: {}
-      }
+        ports: {},
+      },
     };
   }
 }

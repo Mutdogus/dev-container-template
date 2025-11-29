@@ -7,6 +7,7 @@ export enum ErrorCode {
   AUTH_INVALID_TOKEN = 'AUTH_INVALID_TOKEN',
   AUTH_EXPIRED_TOKEN = 'AUTH_EXPIRED_TOKEN',
   AUTH_INSUFFICIENT_SCOPES = 'AUTH_INSUFFICIENT_SCOPES',
+  AUTH_FAILED = 'AUTH_FAILED',
 
   // GitHub API Errors
   GITHUB_RATE_LIMIT = 'GITHUB_RATE_LIMIT',
@@ -50,7 +51,7 @@ export class MCPErrorImpl extends Error {
     code: ErrorCode,
     message: string,
     details: Record<string, unknown> = {},
-    retryable: boolean = false,
+    retryable: boolean = false
   ) {
     super(message);
     this.name = 'MCPError';
@@ -84,7 +85,7 @@ export class MCPErrorImpl extends Error {
           ErrorCode.AUTH_INVALID_TOKEN,
           'Invalid GitHub authentication token',
           { status, originalMessage: message },
-          false,
+          false
         );
 
       case 403:
@@ -93,14 +94,14 @@ export class MCPErrorImpl extends Error {
             ErrorCode.GITHUB_RATE_LIMIT,
             'GitHub API rate limit exceeded',
             { status, originalMessage: message, resetTime: error.headers?.['x-ratelimit-reset'] },
-            true,
+            true
           );
         }
         return new MCPErrorImpl(
           ErrorCode.GITHUB_FORBIDDEN,
           'Access forbidden to GitHub resource',
           { status, originalMessage: message },
-          false,
+          false
         );
 
       case 404:
@@ -108,7 +109,7 @@ export class MCPErrorImpl extends Error {
           ErrorCode.GITHUB_NOT_FOUND,
           'GitHub resource not found',
           { status, originalMessage: message },
-          false,
+          false
         );
 
       case 422:
@@ -116,7 +117,7 @@ export class MCPErrorImpl extends Error {
           ErrorCode.GITHUB_VALIDATION,
           'GitHub API validation failed',
           { status, originalMessage: message, errors: error.errors },
-          false,
+          false
         );
 
       case 500:
@@ -126,7 +127,7 @@ export class MCPErrorImpl extends Error {
           ErrorCode.GITHUB_SERVER_ERROR,
           'GitHub server error',
           { status, originalMessage: message },
-          true,
+          true
         );
 
       default:
@@ -134,7 +135,7 @@ export class MCPErrorImpl extends Error {
           ErrorCode.GITHUB_SERVER_ERROR,
           'Unexpected GitHub API error',
           { status, originalMessage: message },
-          status >= 500,
+          status >= 500
         );
     }
   }
@@ -177,24 +178,28 @@ export class ErrorHandler {
         ErrorCode.UNKNOWN_ERROR,
         error.message || 'Unknown error occurred',
         { originalError: error.name, ...context },
-        false,
+        false
       );
     }
 
     // Log the error
-    logger.error('Error handled', {
-      code: mcpError.code,
-      message: mcpError.message,
-      retryable: mcpError.retryable,
-      context,
-    }, error);
+    logger.error(
+      'Error handled',
+      {
+        code: mcpError.code,
+        message: mcpError.message,
+        retryable: mcpError.retryable,
+        context,
+      },
+      error
+    );
 
     return mcpError.toJSON();
   }
 
   public async withErrorHandling<T>(
     operation: () => Promise<T>,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ): Promise<T> {
     try {
       return await operation();
@@ -212,7 +217,7 @@ export class ErrorHandler {
     code: ErrorCode,
     message: string,
     details: Record<string, unknown> = {},
-    retryable: boolean = false,
+    retryable: boolean = false
   ): MCPErrorImpl {
     return new MCPErrorImpl(code, message, details, retryable);
   }
@@ -221,7 +226,10 @@ export class ErrorHandler {
 export const errorHandler = ErrorHandler.getInstance();
 
 // Utility functions for common error scenarios
-export const createAuthError = (message: string, details: Record<string, unknown> = {}): MCPErrorImpl => {
+export const createAuthError = (
+  message: string,
+  details: Record<string, unknown> = {}
+): MCPErrorImpl => {
   return new MCPErrorImpl(ErrorCode.AUTH_MISSING_CREDENTIALS, message, details, false);
 };
 
@@ -230,11 +238,14 @@ export const createGitHubRateLimitError = (resetTime?: number): MCPErrorImpl => 
     ErrorCode.GITHUB_RATE_LIMIT,
     'GitHub API rate limit exceeded',
     { resetTime },
-    true,
+    true
   );
 };
 
-export const createValidationError = (message: string, details: Record<string, unknown> = {}): MCPErrorImpl => {
+export const createValidationError = (
+  message: string,
+  details: Record<string, unknown> = {}
+): MCPErrorImpl => {
   return new MCPErrorImpl(ErrorCode.MCP_INVALID_INPUT, message, details, false);
 };
 
@@ -243,6 +254,6 @@ export const createTaskConversionError = (taskId: string, reason: string): MCPEr
     ErrorCode.TASK_CONVERSION,
     `Failed to convert task ${taskId}`,
     { taskId, reason },
-    false,
+    false
   );
 };

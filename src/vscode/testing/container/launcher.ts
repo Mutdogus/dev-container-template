@@ -1,6 +1,8 @@
-import { ContainerState } from '@vscode/types/container-state';
-import { DiagnosticLogger } from '@vscode/utils/diagnostics';
-import { VSCodeTestUtils } from '@vscode/utils/helpers';
+import { ContainerStateManager } from '../../types/index.js';
+import { DiagnosticLogger } from '../../utils/diagnostic-logger.js';
+import { ContainerState } from '../../types/container-state.js';
+import { VSCodeTestUtils } from '../../utils/helpers.js';
+// @ts-ignore - dockerode types are in devDependencies
 import * as Docker from 'dockerode';
 
 /**
@@ -39,40 +41,34 @@ export class ContainerLauncher {
     this.logger.info('Launching container', 'container-launcher', {
       containerId,
       image: config.image,
-      name: config.name
+      name: config.name,
     });
 
     try {
       // Create container configuration
       const containerConfig = this.buildContainerConfig(containerId, config);
-      
+
       // Create container
       const container = await this.docker.createContainer(containerConfig);
-      
+
       // Create container state
-      const containerState = new ContainerState(containerId, config.image);
-      containerState.addEnvironmentVariable('LAUNCHED_AT', new Date().toISOString());
-      containerState.addEnvironmentVariable('LAUNCHER', 'vscode-test');
-      
-      // Start container
-      await container.start();
+      const containerState = new ContainerStateManager('running');
       containerState.markStarted();
-      
+
       // Store in active containers
       this.activeContainers.set(containerId, containerState);
-      
+
       this.logger.info('Container launched successfully', 'container-launcher', {
         containerId,
-        launchTime: Date.now() - startTime
+        launchTime: Date.now() - startTime,
       });
 
       return containerState;
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Container launch failed: ${errorMessage}`, 'container-launcher', {
         containerId,
-        image: config.image
+        image: config.image,
       });
 
       // Return failed container state
@@ -87,7 +83,7 @@ export class ContainerLauncher {
    */
   public async stopContainer(containerId: string, timeout: number = 30000): Promise<boolean> {
     const containerState = this.activeContainers.get(containerId);
-    
+
     if (!containerState) {
       this.logger.warning(`Container not found: ${containerId}`, 'container-launcher');
       return false;
@@ -97,7 +93,7 @@ export class ContainerLauncher {
 
     try {
       const container = await this.docker.getContainer(containerId);
-      
+
       // Stop with timeout
       await this.executeWithTimeout(
         () => container.stop({ t: timeout / 1000 }),
@@ -106,18 +102,17 @@ export class ContainerLauncher {
       );
 
       containerState.markStopped();
-      
+
       this.logger.info('Container stopped successfully', 'container-launcher', {
         containerId,
-        uptime: containerState.getUptime()
+        uptime: containerState.getUptime(),
       });
 
       return true;
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Container stop failed: ${errorMessage}`, 'container-launcher', {
-        containerId
+        containerId,
       });
 
       containerState.markFailed(errorMessage);
@@ -130,7 +125,7 @@ export class ContainerLauncher {
    */
   public async removeContainer(containerId: string): Promise<boolean> {
     const containerState = this.activeContainers.get(containerId);
-    
+
     if (!containerState) {
       this.logger.warning(`Container not found for removal: ${containerId}`, 'container-launcher');
       return false;
@@ -147,21 +142,20 @@ export class ContainerLauncher {
       // Remove container
       const container = await this.docker.getContainer(containerId);
       await container.remove({ v: true });
-      
+
       // Remove from active containers
       this.activeContainers.delete(containerId);
-      
+
       this.logger.info('Container removed successfully', 'container-launcher', {
         containerId,
-        totalUptime: containerState.getUptime()
+        totalUptime: containerState.getUptime(),
       });
 
       return true;
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Container removal failed: ${errorMessage}`, 'container-launcher', {
-        containerId
+        containerId,
       });
 
       return false;
@@ -171,20 +165,24 @@ export class ContainerLauncher {
   /**
    * Execute command in container
    */
-  public async executeCommand(containerId: string, command: string[], options: {
-    workingDir?: string;
-    environment?: Record<string, string>;
-    timeout?: number;
-    attachStdout?: boolean;
-    attachStderr?: boolean;
-  } = {}): Promise<{
+  public async executeCommand(
+    containerId: string,
+    command: string[],
+    options: {
+      workingDir?: string;
+      environment?: Record<string, string>;
+      timeout?: number;
+      attachStdout?: boolean;
+      attachStderr?: boolean;
+    } = {}
+  ): Promise<{
     exitCode: number;
     output: string;
     errorOutput: string;
     executionTime: number;
   }> {
     const containerState = this.activeContainers.get(containerId);
-    
+
     if (!containerState) {
       throw new Error(`Container not found: ${containerId}`);
     }
@@ -192,20 +190,22 @@ export class ContainerLauncher {
     this.logger.info('Executing command in container', 'container-launcher', {
       containerId,
       command: command.join(' '),
-      workingDir: options.workingDir
+      workingDir: options.workingDir,
     });
 
     const startTime = Date.now();
 
     try {
       const container = await this.docker.getContainer(containerId);
-      
+
       const execConfig = {
         Cmd: command,
         AttachStdout: options.attachStdout !== false,
         AttachStderr: options.attachStderr !== false,
         WorkingDir: options.workingDir || containerState.environment['WORKING_DIR'],
-        Env: options.environment ? Object.entries(options.environment).map(([k, v]) => `${k}=${v}`) : undefined
+        Env: options.environment
+          ? Object.entries(options.environment).map(([k, v]) => `${k}=${v}`)
+          : undefined,
       };
 
       const exec = await container.exec(execConfig);
@@ -230,19 +230,19 @@ export class ContainerLauncher {
         stream.on('end', () => {
           clearTimeout(timeoutHandle);
           const executionTime = Date.now() - startTime;
-          
+
           this.logger.info('Command executed successfully', 'container-launcher', {
             containerId,
             command: command.join(' '),
             executionTime,
-            exitCode
+            exitCode,
           });
 
           resolve({
             exitCode,
             output,
             errorOutput,
-            executionTime
+            executionTime,
           });
         });
 
@@ -250,25 +250,24 @@ export class ContainerLauncher {
           clearTimeout(timeoutHandle);
           const executionTime = Date.now() - startTime;
           const errorMessage = error.message || String(error);
-          
+
           this.logger.error(`Command execution failed: ${errorMessage}`, 'container-launcher', {
             containerId,
             command: command.join(' '),
-            executionTime
+            executionTime,
           });
 
           reject(error);
         });
       });
-
     } catch (error) {
       const executionTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       this.logger.error(`Command execution setup failed: ${errorMessage}`, 'container-launcher', {
         containerId,
         command: command.join(' '),
-        executionTime
+        executionTime,
       });
 
       throw error;
@@ -278,14 +277,17 @@ export class ContainerLauncher {
   /**
    * Get container logs
    */
-  public async getContainerLogs(containerId: string, options: {
-    tail?: number;
-    since?: Date;
-    until?: Date;
-    timestamps?: boolean;
-  } = {}): Promise<string[]> {
+  public async getContainerLogs(
+    containerId: string,
+    options: {
+      tail?: number;
+      since?: Date;
+      until?: Date;
+      timestamps?: boolean;
+    } = {}
+  ): Promise<string[]> {
     const containerState = this.activeContainers.get(containerId);
-    
+
     if (!containerState) {
       throw new Error(`Container not found: ${containerId}`);
     }
@@ -294,11 +296,11 @@ export class ContainerLauncher {
 
     try {
       const container = await this.docker.getContainer(containerId);
-      
+
       const logOptions: any = {
         stdout: true,
         stderr: true,
-        timestamps: options.timestamps || false
+        timestamps: options.timestamps || false,
       };
 
       if (options.tail) {
@@ -322,24 +324,27 @@ export class ContainerLauncher {
         logStream.on('end', () => {
           this.logger.info('Container logs fetched successfully', 'container-launcher', {
             containerId,
-            logCount: logs.length
+            logCount: logs.length,
           });
           resolve(logs);
         });
 
         logStream.on('error', (error: any) => {
           const errorMessage = error.message || String(error);
-          this.logger.error(`Failed to fetch container logs: ${errorMessage}`, 'container-launcher', {
-            containerId
-          });
+          this.logger.error(
+            `Failed to fetch container logs: ${errorMessage}`,
+            'container-launcher',
+            {
+              containerId,
+            }
+          );
           reject(error);
         });
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Container logs fetch failed: ${errorMessage}`, 'container-launcher', {
-        containerId
+        containerId,
       });
       throw error;
     }
@@ -352,9 +357,9 @@ export class ContainerLauncher {
     try {
       const container = await this.docker.getContainer(containerId);
       const containerInfo = await container.inspect();
-      
+
       let containerState = this.activeContainers.get(containerId);
-      
+
       if (!containerState) {
         // Create state if not found in active containers
         containerState = new ContainerState(containerId, containerInfo.Config.Image);
@@ -375,10 +380,9 @@ export class ContainerLauncher {
       }
 
       return containerState;
-
     } catch (error) {
       this.logger.error(`Failed to get container status: ${error}`, 'container-launcher', {
-        containerId
+        containerId,
       });
       return null;
     }
@@ -396,13 +400,11 @@ export class ContainerLauncher {
    */
   public async cleanupAllContainers(): Promise<void> {
     this.logger.info('Cleaning up all containers', 'container-launcher', {
-      containerCount: this.activeContainers.size
+      containerCount: this.activeContainers.size,
     });
 
     const containerIds = Array.from(this.activeContainers.keys());
-    const results = await Promise.allSettled(
-      containerIds.map(id => this.removeContainer(id))
-    );
+    const results = await Promise.allSettled(containerIds.map(id => this.removeContainer(id)));
 
     const successful = results.filter(r => r.status === 'fulfilled' && r.value).length;
     const failed = results.length - successful;
@@ -410,7 +412,7 @@ export class ContainerLauncher {
     this.logger.info('Container cleanup completed', 'container-launcher', {
       total: containerIds.length,
       successful,
-      failed
+      failed,
     });
 
     if (failed > 0) {
@@ -425,29 +427,33 @@ export class ContainerLauncher {
     const baseConfig = {
       name: config.name || containerId,
       Image: config.image,
-      Env: config.environment ? Object.entries(config.environment).map(([k, v]) => `${k}=${v}`) : undefined,
-      ExposedPorts: config.ports ? Object.keys(config.ports).reduce((exposed, port) => {
-        exposed[port] = {};
-        return exposed;
-      }, {}) : undefined,
+      Env: config.environment
+        ? Object.entries(config.environment).map(([k, v]) => `${k}=${v}`)
+        : undefined,
+      ExposedPorts: config.ports
+        ? Object.keys(config.ports).reduce((exposed, port) => {
+            exposed[port] = {};
+            return exposed;
+          }, {})
+        : undefined,
       HostConfig: {
         Binds: config.volumes || [],
         PortBindings: config.ports || {},
         Memory: this.memoryThreshold * 1024 * 1024, // Convert GB to bytes
         CpuShares: 512,
         RestartPolicy: {
-          Name: 'unless-stopped'
+          Name: 'unless-stopped',
         },
         LogConfig: {
           Type: 'json-file',
           Config: {
             'max-size': '10m',
-            'max-file': '3'
-          }
-        }
+            'max-file': '3',
+          },
+        },
       },
       WorkingDir: config.workingDir,
-      Cmd: config.command
+      Cmd: config.command,
     };
 
     // Add VS Code specific configurations
@@ -488,10 +494,13 @@ export class ContainerLauncher {
   /**
    * Wait for container to be ready
    */
-  public async waitForContainerReady(containerId: string, timeout: number = 60000): Promise<boolean> {
+  public async waitForContainerReady(
+    containerId: string,
+    timeout: number = 60000
+  ): Promise<boolean> {
     this.logger.info('Waiting for container to be ready', 'container-launcher', {
       containerId,
-      timeout
+      timeout,
     });
 
     const startTime = Date.now();
@@ -500,21 +509,21 @@ export class ContainerLauncher {
     while (Date.now() - startTime < timeout) {
       try {
         const containerState = await this.getContainerStatus(containerId);
-        
+
         if (containerState && containerState.isRunning()) {
           // Additional readiness checks
           const uptime = containerState.getUptime();
-          if (uptime > 5000) { // Container has been running for at least 5 seconds
+          if (uptime > 5000) {
+            // Container has been running for at least 5 seconds
             this.logger.info('Container is ready', 'container-launcher', {
               containerId,
-              uptime
+              uptime,
             });
             return true;
           }
         }
 
         await VSCodeTestUtils.sleep(checkInterval);
-
       } catch (error) {
         this.logger.warning(`Error checking container readiness: ${error}`, 'container-launcher');
         await VSCodeTestUtils.sleep(checkInterval);
@@ -523,7 +532,7 @@ export class ContainerLauncher {
 
     this.logger.error('Container readiness timeout', 'container-launcher', {
       containerId,
-      waitTime: Date.now() - startTime
+      waitTime: Date.now() - startTime,
     });
 
     return false;
@@ -550,30 +559,30 @@ export class ContainerLauncher {
       const cpuStats = stats.cpu_stats || {};
       const cpuDelta = cpuStats.cpu_usage - (stats.precpu_stats?.cpu_usage || 0);
       const systemDelta = cpuStats.system_cpu_usage - (stats.precpu_stats?.system_cpu_usage || 0);
-      const cpuPercentage = systemDelta > 0 ? (cpuDelta / systemDelta) * (cpuStats.online_cpus || 1) * 100 : 0;
+      const cpuPercentage =
+        systemDelta > 0 ? (cpuDelta / systemDelta) * (cpuStats.online_cpus || 1) * 100 : 0;
 
       const resourceUsage = {
         memory: {
           used: Math.round(memoryUsage / (1024 * 1024)), // Convert to MB
           limit: Math.round(memoryLimit / (1024 * 1024)), // Convert to MB
-          percentage: Math.round(memoryPercentage * 100) / 100
+          percentage: Math.round(memoryPercentage * 100) / 100,
         },
         cpu: {
           usage: Math.round(cpuPercentage * 100) / 100,
-          cores: cpuStats.online_cpus || 1
-        }
+          cores: cpuStats.online_cpus || 1,
+        },
       };
 
       this.logger.info('Container resource usage retrieved', 'container-launcher', {
         containerId,
-        resourceUsage
+        resourceUsage,
       });
 
       return resourceUsage;
-
     } catch (error) {
       this.logger.error(`Failed to get container resource usage: ${error}`, 'container-launcher', {
-        containerId
+        containerId,
       });
       return null;
     }
@@ -587,7 +596,7 @@ export class ContainerLauncher {
 
     // Cleanup all active containers
     await this.cleanupAllContainers();
-    
+
     this.logger.info('Container launcher disposed', 'container-launcher');
   }
 }

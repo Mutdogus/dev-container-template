@@ -1,5 +1,5 @@
-import { DiagnosticInfo } from '@vscode/types';
-import { DiagnosticLogger } from './diagnostics';
+import { DiagnosticInfo } from '../types';
+import { DiagnosticLogger } from './diagnostic-logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -31,63 +31,98 @@ export class TestLogger {
       message: `Starting test: ${testName}`,
       timestamp: new Date(),
       source: 'test-logger',
-      details: context
+      details: context,
     });
   }
 
   /**
    * Log test completion
    */
-  public logTestEnd(testName: string, status: 'passed' | 'failed', duration: number, context?: Record<string, any>): void {
-    this.diagnosticLogger.info(`Test ${testName} ${status} in ${duration}ms`, 'test-logger', { status, duration, ...context });
+  public logTestEnd(
+    testName: string,
+    status: 'passed' | 'failed',
+    duration: number,
+    context?: Record<string, any>
+  ): void {
+    this.diagnosticLogger.info(`Test ${testName} ${status} in ${duration}ms`, 'test-logger', {
+      status,
+      duration,
+      ...context,
+    });
     this.addToBuffer({
       level: status === 'failed' ? 'error' : 'info',
       message: `Test ${testName} ${status} in ${duration}ms`,
       timestamp: new Date(),
       source: 'test-logger',
-      details: { status, duration, ...context }
+      details: { status, duration, ...context },
     });
   }
 
   /**
    * Log container operation
    */
-  public logContainerOperation(operation: string, containerId: string, context?: Record<string, any>): void {
-    this.diagnosticLogger.info(`Container ${operation}: ${containerId}`, 'container-logger', context);
+  public logContainerOperation(
+    operation: string,
+    containerId: string,
+    context?: Record<string, any>
+  ): void {
+    this.diagnosticLogger.info(
+      `Container ${operation}: ${containerId}`,
+      'container-logger',
+      context
+    );
     this.addToBuffer({
       level: 'info',
       message: `Container ${operation}: ${containerId}`,
       timestamp: new Date(),
       source: 'container-logger',
-      details: context
+      details: context,
     });
   }
 
   /**
    * Log extension operation
    */
-  public logExtensionOperation(operation: string, extensionId: string, context?: Record<string, any>): void {
-    this.diagnosticLogger.info(`Extension ${operation}: ${extensionId}`, 'extension-logger', context);
+  public logExtensionOperation(
+    operation: string,
+    extensionId: string,
+    context?: Record<string, any>
+  ): void {
+    this.diagnosticLogger.info(
+      `Extension ${operation}: ${extensionId}`,
+      'extension-logger',
+      context
+    );
     this.addToBuffer({
       level: 'info',
       message: `Extension ${operation}: ${extensionId}`,
       timestamp: new Date(),
       source: 'extension-logger',
-      details: context
+      details: context,
     });
   }
 
   /**
    * Log performance metrics
    */
-  public logPerformanceMetric(metric: string, value: number, unit: string, context?: Record<string, any>): void {
-    this.diagnosticLogger.info(`Performance: ${metric} = ${value}${unit}`, 'performance-logger', { metric, value, unit, ...context });
+  public logPerformanceMetric(
+    metric: string,
+    value: number,
+    unit: string,
+    context?: Record<string, any>
+  ): void {
+    this.diagnosticLogger.info(`Performance: ${metric} = ${value}${unit}`, 'performance-logger', {
+      metric,
+      value,
+      unit,
+      ...context,
+    });
     this.addToBuffer({
       level: 'info',
       message: `Performance: ${metric} = ${value}${unit}`,
       timestamp: new Date(),
       source: 'performance-logger',
-      details: { metric, value, unit, ...context }
+      details: { metric, value, unit, ...context },
     });
   }
 
@@ -97,7 +132,7 @@ export class TestLogger {
   public logError(error: Error, context: string, additionalInfo?: Record<string, any>): void {
     this.diagnosticLogger.error(`${context}: ${error.message}`, context, {
       stack: error.stack,
-      ...additionalInfo
+      ...additionalInfo,
     });
     this.addToBuffer({
       level: 'error',
@@ -106,8 +141,8 @@ export class TestLogger {
       source: context,
       details: {
         stack: error.stack,
-        ...additionalInfo
-      }
+        ...additionalInfo,
+      },
     });
   }
 
@@ -121,7 +156,7 @@ export class TestLogger {
       message,
       timestamp: new Date(),
       source: context,
-      details: additionalInfo
+      details: additionalInfo,
     });
   }
 
@@ -135,7 +170,7 @@ export class TestLogger {
       message,
       timestamp: new Date(),
       source: context,
-      details: additionalInfo
+      details: additionalInfo,
     });
   }
 
@@ -177,12 +212,11 @@ export class TestLogger {
 
     try {
       await this.ensureLogDirectory();
-      
+
       const logLines = entriesToFlush.map(entry => this.formatLogEntry(entry));
       const logContent = logLines.join('\n') + '\n';
 
       await fs.appendFile(this.logFile, logContent, 'utf-8');
-      
     } catch (error) {
       console.error('Failed to flush log buffer:', error);
       // Re-add entries to buffer if flush failed
@@ -194,7 +228,7 @@ export class TestLogger {
    * Ensure log directory exists
    */
   private async ensureLogDirectory(): Promise<void> {
-    const logDir = path.dirname(this.logFile);
+    const logDir = path.dirname(this.logFile!);
     try {
       await fs.access(logDir);
     } catch {
@@ -229,13 +263,13 @@ export class TestLogger {
     debug: number;
   } {
     const allLogs = this.diagnosticLogger.getLogs();
-    
+
     return {
       total: allLogs.length,
       errors: allLogs.filter(log => log.level === 'error').length,
       warnings: allLogs.filter(log => log.level === 'warning').length,
       info: allLogs.filter(log => log.level === 'info').length,
-      debug: allLogs.filter(log => log.level === 'debug').length
+      debug: allLogs.filter(log => log.level === 'debug').length,
     };
   }
 
@@ -245,19 +279,19 @@ export class TestLogger {
   public async exportLogs(outputPath?: string): Promise<string> {
     const allLogs = this.diagnosticLogger.getLogs();
     const exportPath = outputPath || path.join(process.cwd(), 'test-results', 'logs-export.json');
-    
+
     await this.ensureLogDirectory();
-    
+
     const exportData = {
       exportTime: new Date().toISOString(),
       statistics: this.getStatistics(),
-      logs: allLogs
+      logs: allLogs,
     };
 
     await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2), 'utf-8');
-    
+
     this.diagnosticLogger.info('Logs exported to file', 'test-logger', { exportPath });
-    
+
     return exportPath;
   }
 
@@ -277,12 +311,12 @@ export class TestLogger {
     if (this.flushInterval) {
       clearInterval(this.flushInterval);
     }
-    
+
     // Flush any remaining logs
     this.flushBuffer().catch(error => {
       console.error('Failed to flush logs on dispose:', error);
     });
-    
+
     this.diagnosticLogger.info('Test logger disposed', 'test-logger');
   }
 }
@@ -307,3 +341,10 @@ export class TestLoggerFactory {
     }
   }
 }
+
+// Add static getInstance to TestLogger class
+Object.defineProperty(TestLogger, 'getInstance', {
+  value: TestLoggerFactory.getInstance,
+  writable: false,
+  configurable: false,
+});

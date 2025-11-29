@@ -1,14 +1,6 @@
-import type { GitHubAuthentication } from '../../../types/github-auth.js';
+import type { GitHubAuthentication, OAuthTokenResponse } from '../../../types/github-auth.js';
 import { logger } from '../../../utils/logger.js';
 import { errorHandler, ErrorCode } from '../../../utils/errors.js';
-
-export interface OAuthTokenResponse {
-  access_token: string;
-  token_type: string;
-  scope: string;
-  expires_in?: number;
-  refresh_token?: string;
-}
 
 export interface OAuthUserInfo {
   login: string;
@@ -29,7 +21,7 @@ export class GitHubOAuthAuth {
     clientId: string,
     clientSecret: string,
     redirectUri: string = 'http://localhost:3000/callback',
-    scopes: string[] = ['repo', 'issues:write'],
+    scopes: string[] = ['repo', 'issues:write']
   ) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
@@ -46,7 +38,7 @@ export class GitHubOAuthAuth {
     });
 
     const url = `https://github.com/login/oauth/authorize?${params.toString()}`;
-    
+
     logger.info('Generated GitHub OAuth authorization URL', {
       clientId: this.clientId,
       redirectUri: this.redirectUri,
@@ -56,6 +48,7 @@ export class GitHubOAuthAuth {
     return url;
   }
 
+  // @ts-nostrict
   public async exchangeCodeForToken(code: string, state?: string): Promise<OAuthTokenResponse> {
     logger.info('Exchanging OAuth code for access token', { code: code.substring(0, 10) + '...' });
 
@@ -63,7 +56,7 @@ export class GitHubOAuthAuth {
       const response = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -80,17 +73,17 @@ export class GitHubOAuthAuth {
         throw errorHandler.createError(
           ErrorCode.AUTH_FAILED,
           `OAuth token exchange failed: ${response.status} ${errorText}`,
-          { status: response.status, errorText },
+          { status: response.status, errorText }
         );
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as OAuthTokenResponse;
 
       if (data.error) {
         throw errorHandler.createError(
           ErrorCode.AUTH_FAILED,
           `OAuth error: ${data.error_description || data.error}`,
-          { error: data.error, errorDescription: data.error_description },
+          { error: data.error, errorDescription: data.error_description }
         );
       }
 
@@ -115,8 +108,8 @@ export class GitHubOAuthAuth {
     try {
       const response = await fetch('https://api.github.com/user', {
         headers: {
-          'Authorization': `token ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
         },
       });
 
@@ -125,11 +118,11 @@ export class GitHubOAuthAuth {
         throw errorHandler.createError(
           ErrorCode.AUTH_FAILED,
           `Failed to fetch user info: ${response.status} ${errorText}`,
-          { status: response.status, errorText },
+          { status: response.status, errorText }
         );
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as OAuthUserInfo;
 
       logger.info('Successfully fetched user info', {
         login: data.login,
@@ -137,14 +130,7 @@ export class GitHubOAuthAuth {
         type: data.type,
       });
 
-      return {
-        login: data.login,
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        avatar_url: data.avatar_url,
-        type: data.type,
-      };
+      return data;
     } catch (error) {
       if (error instanceof Error) {
         throw error;
@@ -226,19 +212,15 @@ export class GitHubOAuthAuth {
 
   public static createFromEnvironment(): GitHubOAuthAuth {
     const env = GitHubOAuthAuth.validateEnvironmentVariables();
-    
+
     if (!env.valid) {
       throw errorHandler.createError(
         ErrorCode.AUTH_MISSING_CREDENTIALS,
         'Missing required OAuth environment variables',
-        { errors: env.errors },
+        { errors: env.errors }
       );
     }
 
-    return new GitHubOAuthAuth(
-      env.clientId!,
-      env.clientSecret!,
-      env.redirectUri,
-    );
+    return new GitHubOAuthAuth(env.clientId!, env.clientSecret!, env.redirectUri);
   }
 }

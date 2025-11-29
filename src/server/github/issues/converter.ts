@@ -1,8 +1,8 @@
-import type { SpeckitTask } from '../../types/speckit-task.js';
-import type { GitHubIssue } from '../../types/github-issue.js';
+import type { SpeckitTask } from '../../../types/speckit-task.js';
+import type { GitHubIssue } from '../../../types/github-issue.js';
 import { GitHubClient } from '../client.js';
-import { logger } from '../../utils/logger.js';
-import { errorHandler, ErrorCode } from '../../utils/errors.js';
+import { logger } from '../../../utils/logger.js';
+import { errorHandler, ErrorCode } from '../../../utils/errors.js';
 
 export class IssueConverter {
   private githubClient: GitHubClient;
@@ -18,7 +18,7 @@ export class IssueConverter {
       labels?: string[];
       assignees?: string[];
       priority?: 'low' | 'medium' | 'high';
-    } = {},
+    } = {}
   ): Promise<GitHubIssue> {
     logger.info('Converting speckit task to GitHub issue', {
       taskId: task.id,
@@ -28,12 +28,12 @@ export class IssueConverter {
 
     try {
       const [owner, repo] = repository.split('/');
-      
+
       if (!owner || !repo) {
         throw errorHandler.createError(
           ErrorCode.TASK_VALIDATION,
           'Invalid repository format. Expected "owner/repo"',
-          { repository },
+          { repository }
         );
       }
 
@@ -47,7 +47,8 @@ export class IssueConverter {
       });
 
       const githubIssue: GitHubIssue = {
-        id: data.number,
+        id: data.number.toString(),
+        number: data.number,
         url: data.html_url,
         title: data.title,
         body: data.body ?? '',
@@ -58,12 +59,6 @@ export class IssueConverter {
         updatedAt: new Date(data.updated_at),
         taskId: task.id,
       };
-
-      logger.info('Successfully created GitHub issue', {
-        taskId: task.id,
-        issueId: githubIssue.id,
-        issueUrl: githubIssue.url,
-      });
 
       return githubIssue;
     } catch (error) {
@@ -83,7 +78,7 @@ export class IssueConverter {
       labels?: string[];
       assignees?: string[];
       priority?: 'low' | 'medium' | 'high';
-    } = {},
+    } = {}
   ): Promise<GitHubIssue> {
     logger.info('Updating GitHub issue from speckit task', {
       taskId: task.id,
@@ -93,12 +88,12 @@ export class IssueConverter {
 
     try {
       const [owner, repo] = repository.split('/');
-      
+
       if (!owner || !repo) {
         throw errorHandler.createError(
           ErrorCode.TASK_VALIDATION,
           'Invalid repository format. Expected "owner/repo"',
-          { repository },
+          { repository }
         );
       }
 
@@ -113,7 +108,8 @@ export class IssueConverter {
       });
 
       const githubIssue: GitHubIssue = {
-        id: data.number,
+        id: data.number.toString(),
+        number: data.number,
         url: data.html_url,
         title: data.title,
         body: data.body ?? '',
@@ -122,14 +118,8 @@ export class IssueConverter {
         assignees: data.assignees.map((assignee: any) => assignee.login),
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at),
-        taskId: task.id,
+        taskId: this.extractTaskId(data.body || ''),
       };
-
-      logger.info('Successfully updated GitHub issue', {
-        taskId: task.id,
-        issueId: githubIssue.id,
-        issueUrl: githubIssue.url,
-      });
 
       return githubIssue;
     } catch (error) {
@@ -147,12 +137,12 @@ export class IssueConverter {
 
     try {
       const [owner, repo] = repository.split('/');
-      
+
       if (!owner || !repo) {
         throw errorHandler.createError(
           ErrorCode.TASK_VALIDATION,
           'Invalid repository format. Expected "owner/repo"',
-          { repository },
+          { repository }
         );
       }
 
@@ -165,22 +155,18 @@ export class IssueConverter {
       });
 
       const githubIssue: GitHubIssue = {
-        id: data.number,
+        id: data.number.toString(),
+        number: data.number,
         url: data.html_url,
         title: data.title,
         body: data.body ?? '',
         state: data.state as 'open' | 'closed' | 'locked',
-        labels: data.labels.map((label: any) => label.name),
-        assignees: data.assignees.map((assignee: any) => assignee.login),
+        labels: data.labels?.map((label: any) => label.name) || [],
+        assignees: data.assignees?.map((assignee: any) => assignee.login) || [],
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at),
-        taskId: this.extractTaskId(data.body ?? ''),
+        taskId: this.extractTaskId(data.body || ''),
       };
-
-      logger.debug('Successfully retrieved GitHub issue', {
-        issueId: githubIssue.id,
-        taskId: githubIssue.taskId,
-      });
 
       return githubIssue;
     } catch (error) {
@@ -198,14 +184,11 @@ export class IssueConverter {
       labels?: string[];
       assignees?: string[];
       priority?: 'low' | 'medium' | 'high';
-    },
+    }
   ) {
-    const labels = [
-      'speckit',
-      task.priority,
-      task.story,
-      ...(options.labels ?? []),
-    ].filter(Boolean);
+    const labels = ['speckit', task.priority, task.story, ...(options.labels ?? [])].filter(
+      Boolean
+    );
 
     const body = this.buildIssueBody(task);
 
@@ -213,7 +196,7 @@ export class IssueConverter {
       title: this.buildIssueTitle(task),
       body,
       labels,
-      assignees: options.assignees ?? [],
+      assignees: options.assignees || [],
     };
   }
 
@@ -234,11 +217,15 @@ export class IssueConverter {
 
 ${task.description}
 
-${task.dependencies.length > 0 ? `
+${
+  task.dependencies.length > 0
+    ? `
 ## Dependencies
 
 ${task.dependencies.map(dep => `- ${dep}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
 ## Metadata
 
@@ -252,7 +239,7 @@ ${JSON.stringify(task.metadata, null, 2)}
 
   private extractTaskId(body: string): string {
     const match = body.match(/\*\*Task ID\*\*:\s*([^\s\n]+)/);
-    return match ? match[1] : '';
+    return match?.[1] || '';
   }
 
   public async convertMultipleTasks(
@@ -264,7 +251,7 @@ ${JSON.stringify(task.metadata, null, 2)}
       priority?: 'low' | 'medium' | 'high';
       createMissing?: boolean;
       updateExisting?: boolean;
-    } = {},
+    } = {}
   ): Promise<Array<{ task: SpeckitTask; issue?: GitHubIssue; error?: string }>> {
     logger.info('Converting multiple tasks to GitHub issues', {
       taskCount: tasks.length,

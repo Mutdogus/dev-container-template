@@ -1,3 +1,5 @@
+import type { GitHubAuthentication } from './github-auth.js';
+
 export interface MCPServerConfiguration {
   serverName: string;
   command: string;
@@ -5,4 +7,5 @@ export interface MCPServerConfiguration {
   env: Record<string, string>;
   timeout: number;
   enabled: boolean;
+  auth?: GitHubAuthentication;
 }

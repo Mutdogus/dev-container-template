@@ -1,5 +1,5 @@
-import { DiagnosticLogger, DiagnosticUtils } from '@vscode/utils/diagnostics';
-import { MockFactory } from '@vscode/utils/test-helpers';
+import { DiagnosticLogger, DiagnosticUtils } from '../../../src/vscode/utils/diagnostics';
+import { MockFactory } from '../utils/test-helpers';
 
 describe('Diagnostic System', () => {
   let logger: DiagnosticLogger;
@@ -225,7 +225,7 @@ describe('Diagnostic Utils', () => {
       expect(logs[0].details).toEqual({
         error: 'Test error message',
         stack: expect.any(String),
-        additional: 'info'
+        additional: 'info',
       });
     });
   });

@@ -1,10 +1,10 @@
 import { Octokit } from '@octokit/rest';
 import { throttling } from '@octokit/plugin-throttling';
 import { retry } from '@octokit/plugin-retry';
-import type { GitHubAuthentication } from '../../types/github-auth.js';
-import type { GitHubRepository, APILimits } from '../../types/github-issue.js';
-import { logger } from '../../utils/logger.js';
-import { errorHandler, ErrorCode } from '../../utils/errors.js';
+import type { GitHubAuthentication } from '../../types/github-auth';
+import type { GitHubRepository, APILimits } from '../../types/github-issue';
+import { logger } from '../../utils/logger';
+import { errorHandler, ErrorCode } from '../../utils/errors';
 
 const OctokitWithPlugins = Octokit.plugin(throttling, retry);
 
@@ -19,7 +19,7 @@ export class GitHubClient {
   public async initialize(): Promise<void> {
     try {
       const authOptions = this.buildAuthOptions();
-      
+
       this.client = new OctokitWithPlugins({
         auth: authOptions,
         throttle: {
@@ -31,12 +31,14 @@ export class GitHubClient {
               url: options.url,
               request: options.request,
             });
-
-            if (options.request?.retryCount <= 3) {
-              logger.info('Retrying GitHub request', { retryCount: options.request.retryCount });
-              return true;
-            }
-            return false;
+          },
+          onSecondaryRateLimit: (retryAfter: number, options: any) => {
+            logger.warn('GitHub secondary rate limit exceeded', {
+              retryAfter,
+              method: options.method,
+              url: options.url,
+              request: options.request,
+            });
           },
         },
         retry: {
@@ -46,7 +48,7 @@ export class GitHubClient {
 
       // Test authentication
       await this.testAuthentication();
-      
+
       logger.info('GitHub client initialized successfully', {
         authType: this.auth.type,
         scopes: this.auth.scopes,
@@ -63,7 +65,7 @@ export class GitHubClient {
         if (!this.auth.token) {
           throw errorHandler.createError(
             ErrorCode.AUTH_MISSING_CREDENTIALS,
-            'PAT authentication requires a token',
+            'PAT authentication requires a token'
           );
         }
         return this.auth.token;
@@ -72,7 +74,7 @@ export class GitHubClient {
         if (!this.auth.clientId || !this.auth.clientSecret) {
           throw errorHandler.createError(
             ErrorCode.AUTH_MISSING_CREDENTIALS,
-            'OAuth authentication requires clientId and clientSecret',
+            'OAuth authentication requires clientId and ClientSecret'
           );
         }
         return {
@@ -84,13 +86,13 @@ export class GitHubClient {
         // GitHub App authentication would be handled here
         throw errorHandler.createError(
           ErrorCode.AUTH_MISSING_CREDENTIALS,
-          'GitHub App authentication not yet implemented',
+          'GitHub App authentication not yet implemented'
         );
 
       default:
         throw errorHandler.createError(
           ErrorCode.AUTH_MISSING_CREDENTIALS,
-          `Unsupported authentication type: ${this.auth.type}`,
+          `Unsupported authentication type: ${this.auth.type}`
         );
     }
   }
@@ -116,7 +118,7 @@ export class GitHubClient {
     if (!this.client) {
       throw errorHandler.createError(
         ErrorCode.SYSTEM_ERROR,
-        'GitHub client not initialized. Call initialize() first.',
+        'GitHub client not initialized. Call initialize() first.'
       );
     }
     return this.client;
@@ -124,7 +126,7 @@ export class GitHubClient {
 
   public async getRateLimits(): Promise<APILimits> {
     const client = this.getClient();
-    
+
     try {
       const { data } = await client.rest.rateLimit.get();
       const core = data.resources.core;
@@ -140,9 +142,11 @@ export class GitHubClient {
     }
   }
 
-  public async getRepositories(type: 'all' | 'owner' | 'member' = 'all'): Promise<GitHubRepository[]> {
+  public async getRepositories(
+    type: 'all' | 'owner' | 'member' = 'all'
+  ): Promise<GitHubRepository[]> {
     const client = this.getClient();
-    
+
     try {
       const { data } = await client.rest.repos.listForAuthenticatedUser({
         type,
@@ -155,7 +159,7 @@ export class GitHubClient {
         name: repo.name,
         isPrivate: repo.private,
         permissions: {
-          pull: repo.permissions?.pull ?? false,
+          read: repo.permissions?.pull ?? false,
           push: repo.permissions?.push ?? false,
           admin: repo.permissions?.admin ?? false,
           issues: repo.permissions?.issues ?? false,
@@ -175,7 +179,7 @@ export class GitHubClient {
 
   public async getRepository(owner: string, name: string): Promise<GitHubRepository> {
     const client = this.getClient();
-    
+
     try {
       const { data } = await client.rest.repos.get({
         owner,
@@ -186,12 +190,14 @@ export class GitHubClient {
         owner: data.owner.login,
         name: data.name,
         isPrivate: data.private,
-        permissions: {
-          pull: (data as any).permissions?.pull ?? false,
-          push: (data as any).permissions?.push ?? false,
-          admin: (data as any).permissions?.admin ?? false,
-          issues: (data as any).permissions?.issues ?? false,
-        },
+        permissions: [
+          {
+            pull: (data as any).permissions?.pull ?? false,
+            push: (data as any).permissions?.push ?? false,
+            admin: (data as any).permissions?.admin ?? false,
+            issues: (data as any).permissions?.issues ?? false,
+          },
+        ],
         defaultBranch: data.default_branch,
         apiLimits: {
           limit: 0,

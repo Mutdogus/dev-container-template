@@ -1,4 +1,4 @@
-import { ResourceUsage } from '@vscode/types';
+import { ResourceUsage } from './index';
 
 /**
  * Container state models for tracking container lifecycle and status
@@ -25,7 +25,7 @@ export class ContainerState {
     this.resourceUsage = {
       memory: { used: 0, limit: 0, warningThreshold: 2048 },
       cpu: { usage: 0, cores: 0 },
-      disk: { used: 0, available: 0 }
+      disk: { used: 0, available: 0 },
     };
     this.ports = {};
     this.environment = {};
@@ -67,7 +67,7 @@ export class ContainerState {
     this.resourceUsage = {
       memory: { ...this.resourceUsage.memory, ...usage.memory },
       cpu: { ...this.resourceUsage.cpu, ...usage.cpu },
-      disk: { ...this.resourceUsage.disk, ...usage.disk }
+      disk: { ...this.resourceUsage.disk, ...usage.disk },
     };
   }
 
@@ -78,7 +78,7 @@ export class ContainerState {
     this.resourceUsage.memory = {
       used: usedMb,
       limit: limitMb || this.resourceUsage.memory.limit,
-      warningThreshold: warningThresholdMb || this.resourceUsage.memory.warningThreshold
+      warningThreshold: warningThresholdMb || this.resourceUsage.memory.warningThreshold,
     };
   }
 
@@ -88,7 +88,7 @@ export class ContainerState {
   public setCpuUsage(usagePercent: number, cores?: number): void {
     this.resourceUsage.cpu = {
       usage: usagePercent,
-      cores: cores || this.resourceUsage.cpu.cores
+      cores: cores || this.resourceUsage.cpu.cores,
     };
   }
 
@@ -98,7 +98,7 @@ export class ContainerState {
   public setDiskUsage(usedMb: number, availableMb?: number): void {
     this.resourceUsage.disk = {
       used: usedMb,
-      available: availableMb || this.resourceUsage.disk.available
+      available: availableMb || this.resourceUsage.disk.available,
     };
   }
 
@@ -146,7 +146,7 @@ export class ContainerState {
    */
   public getUptimeFormatted(): string {
     const uptimeMs = this.getUptime();
-    
+
     if (uptimeMs < 1000) {
       return `${uptimeMs}ms`;
     }
@@ -239,7 +239,7 @@ export class ContainerState {
       cpuUsage: `${this.resourceUsage.cpu.usage}% (${this.resourceUsage.cpu.cores} cores)`,
       diskUsage: `${this.resourceUsage.disk.used}MB used, ${this.resourceUsage.disk.available}MB available (${this.getDiskUsagePercentage().toFixed(1)}%)`,
       portCount: Object.keys(this.ports).length,
-      volumeCount: this.volumes.length
+      volumeCount: this.volumes.length,
     };
   }
 
@@ -260,7 +260,7 @@ export class ContainerState {
       environment: this.environment,
       volumes: this.volumes,
       metadata: this.metadata,
-      summary: this.getSummary()
+      summary: this.getSummary(),
     };
   }
 
@@ -269,7 +269,7 @@ export class ContainerState {
    */
   public static fromJSON(json: Record<string, any>): ContainerState {
     const state = new ContainerState(json.containerId, json.image);
-    
+
     state.status = json.status;
     state.createdAt = new Date(json.createdAt);
     state.startedAt = json.startedAt ? new Date(json.startedAt) : undefined;
@@ -314,7 +314,7 @@ export class ContainerState {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }

@@ -34,12 +34,18 @@ const ConfigSchema = z.object({
   DEBUG: z.string().optional(),
 
   // Cache Configuration
-  CACHE_ENABLED: z.string().transform(val => val === 'true').default('true'),
+  CACHE_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
   CACHE_TTL: z.string().transform(Number).default('300'),
   CACHE_MAX_SIZE: z.string().transform(Number).default('1000'),
 
   // Batch Processing
-  BATCH_ENABLED: z.string().transform(val => val === 'true').default('true'),
+  BATCH_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
   BATCH_SIZE: z.string().transform(Number).default('10'),
   BATCH_DELAY: z.string().transform(Number).default('1000'),
 
@@ -48,8 +54,14 @@ const ConfigSchema = z.object({
   SESSION_SECRET: z.string().optional(),
 
   // Monitoring
-  HEALTH_CHECK_ENABLED: z.string().transform(val => val === 'true').default('true'),
-  METRICS_ENABLED: z.string().transform(val => val === 'true').default('true'),
+  HEALTH_CHECK_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
+  METRICS_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
 });
 
 export type ServerConfig = z.infer<typeof ConfigSchema>;
@@ -83,7 +95,12 @@ export class ConfigManager {
   }
 
   public getGitHubAuth(): GitHubAuthentication {
-    const { GITHUB_AUTH_TYPE, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_PERSONAL_ACCESS_TOKEN } = this.config;
+    const {
+      GITHUB_AUTH_TYPE,
+      GITHUB_CLIENT_ID,
+      GITHUB_CLIENT_SECRET,
+      GITHUB_PERSONAL_ACCESS_TOKEN,
+    } = this.config;
 
     const auth: GitHubAuthentication = {
       type: GITHUB_AUTH_TYPE,
@@ -94,7 +111,9 @@ export class ConfigManager {
     switch (GITHUB_AUTH_TYPE) {
       case 'oauth':
         if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
-          throw new Error('OAuth authentication requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET');
+          throw new Error(
+            'OAuth authentication requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET'
+          );
         }
         auth.clientId = GITHUB_CLIENT_ID;
         auth.clientSecret = GITHUB_CLIENT_SECRET;
@@ -109,7 +128,9 @@ export class ConfigManager {
 
       case 'app':
         if (!this.config.GITHUB_APP_ID || !this.config.GITHUB_APP_PRIVATE_KEY) {
-          throw new Error('GitHub App authentication requires GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY');
+          throw new Error(
+            'GitHub App authentication requires GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY'
+          );
         }
         // GitHub App authentication is handled at the client level
         break;

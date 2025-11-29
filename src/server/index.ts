@@ -21,7 +21,7 @@ class GitHubMCPServer {
 
   constructor() {
     this.mcpServer = new MCPServer('github-speckit', '1.0.0');
-    
+
     const auth = configManager.getGitHubAuth();
     this.githubClient = new GitHubClient(auth);
     this.issueConverter = new IssueConverter(this.githubClient);
@@ -68,8 +68,8 @@ class GitHubMCPServer {
             rateLimits,
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // List Repositories Tool
@@ -80,15 +80,15 @@ class GitHubMCPServer {
         RepositoryListSchema,
         async ({ type, sort, direction }) => {
           const repositories = await this.githubClient.getRepositories(type);
-          
+
           return {
             repositories,
             totalCount: repositories.length,
             filters: { type, sort, direction },
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // Create Issue Tool
@@ -120,8 +120,8 @@ class GitHubMCPServer {
             issue,
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // Get Issue Tool
@@ -132,14 +132,14 @@ class GitHubMCPServer {
         IssueGetSchema,
         async ({ repository, issueId }) => {
           const issue = await this.issueConverter.getIssue(repository, issueId);
-          
+
           return {
             success: true,
             issue,
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // Convert Tasks Tool
@@ -168,7 +168,7 @@ class GitHubMCPServer {
             {
               createMissing,
               updateExisting,
-            },
+            }
           );
 
           const successCount = results.filter(r => r.issue).length;
@@ -184,8 +184,8 @@ class GitHubMCPServer {
             },
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // Configuration Status Tool
@@ -207,8 +207,8 @@ class GitHubMCPServer {
             environment: config.NODE_ENV,
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     // Configuration Set Tool
@@ -220,7 +220,7 @@ class GitHubMCPServer {
         async ({ authType, clientId, clientSecret, token, repository, timeout }) => {
           // Note: In a real implementation, this would update the configuration
           // For now, we'll just return the proposed configuration
-          
+
           return {
             success: true,
             message: 'Configuration updated (simulated)',
@@ -234,8 +234,8 @@ class GitHubMCPServer {
             },
             timestamp: new Date().toISOString(),
           };
-        },
-      ),
+        }
+      )
     );
 
     logger.info('Registered MCP tools', {
@@ -248,7 +248,7 @@ class GitHubMCPServer {
     try {
       await this.initialize();
       await this.mcpServer.start();
-      
+
       logger.info('GitHub MCP Server started successfully', {
         serverInfo: this.mcpServer.getServerInfo(),
       });
@@ -288,14 +288,15 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
   process.exit(1);
 });
 
 // Start the server if this file is run directly
+// @ts-ignore - import.meta usage for ESM
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
+  main().catch(error => {
     logger.error('Failed to start server', { error: error.message });
     process.exit(1);
   });

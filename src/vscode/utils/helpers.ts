@@ -1,11 +1,12 @@
-import { VSCodeTestResult, ContainerValidation, ExtensionStatus, EnvironmentCheck, ResourceUsage } from '@vscode/types';
-import { TestLogger } from './logger';
+import { VSCodeTestResult, ContainerValidation, ResourceUsage } from '../types';
+import { TestLoggerFactory } from './logger';
+import * as path from 'path';
 
 /**
  * Utility functions and helpers for VS Code testing
  */
 export class VSCodeTestUtils {
-  private static logger = TestLogger.getInstance();
+  private static logger = TestLoggerFactory.getInstance();
 
   /**
    * Wait for a condition to be true with timeout
@@ -14,10 +15,10 @@ export class VSCodeTestUtils {
     condition: () => boolean | Promise<boolean>,
     timeoutMs: number,
     intervalMs: number = 1000,
-    context?: string
+    _context?: string
   ): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs) {
       try {
         const result = await condition();
@@ -25,13 +26,17 @@ export class VSCodeTestUtils {
           return true;
         }
       } catch (error) {
-        this.logger.logWarning(`Condition check failed: ${error}`, 'test-utils', { context });
+        this.logger.logWarning(`Condition check failed: ${error}`, 'test-utils', {
+          context: _context,
+        });
       }
-      
+
       await this.sleep(intervalMs);
     }
-    
-    this.logger.logWarning(`Condition timeout after ${timeoutMs}ms`, 'test-utils', { context });
+
+    this.logger.logWarning(`Condition timeout after ${timeoutMs}ms`, 'test-utils', {
+      context: _context,
+    });
     return false;
   }
 
@@ -41,7 +46,7 @@ export class VSCodeTestUtils {
   public static async executeWithTimeout<T>(
     command: () => Promise<T>,
     timeoutMs: number,
-    context?: string
+    _context?: string
   ): Promise<T> {
     return new Promise(async (resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -75,13 +80,17 @@ export class VSCodeTestUtils {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         if (attempt <= maxRetries) {
           const delay = baseDelayMs * Math.pow(2, attempt - 1);
-          this.logger.logWarning(`Operation failed, retrying in ${delay}ms (attempt ${attempt}/${maxRetries + 1})`, 'test-utils', {
-            context,
-            error: lastError.message
-          });
+          this.logger.logWarning(
+            `Operation failed, retrying in ${delay}ms (attempt ${attempt}/${maxRetries + 1})`,
+            'test-utils',
+            {
+              context,
+              error: lastError.message,
+            }
+          );
           await this.sleep(delay);
         }
       }
@@ -118,8 +127,8 @@ export class VSCodeTestUtils {
       throw new Error(`Invalid memory format: ${memoryStr}`);
     }
 
-    const value = parseFloat(match[1]);
-    const unit = (match[2] || 'B').toUpperCase();
+    const value = parseFloat(match[1]!);
+    const unit = (match[2] || 'B')!.toUpperCase();
 
     switch (unit) {
       case 'KB':
@@ -186,9 +195,11 @@ export class VSCodeTestUtils {
    * Check if container validation is successful
    */
   public static isContainerValidationSuccessful(validation: ContainerValidation): boolean {
-    return validation.status === 'running' && 
-           validation.extensions.every(ext => ext.status === 'loaded') &&
-           validation.environmentChecks.every(check => check.status !== 'failed');
+    return (
+      validation.status === 'running' &&
+      validation.extensions.every(ext => ext.status === 'loaded') &&
+      validation.environmentChecks.every(check => check.status !== 'failed')
+    );
   }
 
   /**
@@ -206,14 +217,20 @@ export class VSCodeTestUtils {
   /**
    * Filter test results by status
    */
-  public static filterTestsByStatus(results: VSCodeTestResult[], status: VSCodeTestResult['status']): VSCodeTestResult[] {
+  public static filterTestsByStatus(
+    results: VSCodeTestResult[],
+    status: VSCodeTestResult['status']
+  ): VSCodeTestResult[] {
     return results.filter(result => result.status === status);
   }
 
   /**
    * Get slowest tests
    */
-  public static getSlowestTests(results: VSCodeTestResult[], count: number = 5): VSCodeTestResult[] {
+  public static getSlowestTests(
+    results: VSCodeTestResult[],
+    count: number = 5
+  ): VSCodeTestResult[] {
     return results
       .filter(result => result.duration !== undefined)
       .sort((a, b) => (b.duration || 0) - (a.duration || 0))
@@ -223,7 +240,10 @@ export class VSCodeTestUtils {
   /**
    * Check memory usage against threshold
    */
-  public static checkMemoryThreshold(usage: ResourceUsage['memory'], thresholdMb: number): {
+  public static checkMemoryThreshold(
+    usage: ResourceUsage['memory'],
+    thresholdMb: number
+  ): {
     isAboveThreshold: boolean;
     usageMb: number;
     thresholdMb: number;
@@ -236,7 +256,7 @@ export class VSCodeTestUtils {
       isAboveThreshold: usageMb > thresholdMb,
       usageMb,
       thresholdMb,
-      percentage
+      percentage,
     };
   }
 
@@ -249,29 +269,29 @@ export class VSCodeTestUtils {
     testFunction: () => Promise<void>
   ): Promise<VSCodeTestResult> {
     const startTime = Date.now();
-    
+
     try {
       await testFunction();
       const duration = Date.now() - startTime;
-      
+
       return {
         id: testId,
         name: testName,
         status: 'passed',
         duration,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       return {
         id: testId,
         name: testName,
         status: 'failed',
         duration,
         error: errorMessage,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -332,7 +352,11 @@ export class VSCodeTestUtils {
       const content = JSON.stringify(data, null, 2);
       await fs.writeFile(filePath, content, 'utf-8');
     } catch (error) {
-      this.logger.logError(error instanceof Error ? error : new Error(String(error)), 'test-utils', { filePath });
+      this.logger.logError(
+        error instanceof Error ? error : new Error(String(error)),
+        'test-utils',
+        { filePath }
+      );
       throw error;
     }
   }
@@ -367,17 +391,21 @@ export class VSCodeTestUtils {
    */
   public static deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
     const result = { ...target };
-    
+
     for (const key in source) {
       if (source[key] !== undefined) {
-        if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-          result[key] = this.deepMerge(result[key] || {}, source[key] as any);
+        if (
+          typeof source[key] === 'object' &&
+          source[key] !== null &&
+          !Array.isArray(source[key])
+        ) {
+          result[key] = this.deepMerge((result[key] as any) || {}, source[key] as any);
         } else {
           result[key] = source[key] as any;
         }
       }
     }
-    
+
     return result;
   }
 }

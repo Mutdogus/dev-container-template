@@ -1,7 +1,7 @@
-import { VSCodeTestRunner } from '@vscode/testing/core/test-runner';
-import { TestConfigurationManager } from '@vscode/testing/config/manager';
-import { MockFactory, AssertionHelpers } from '@vscode/utils/test-helpers';
-import { TestLogger } from '@vscode/utils/logger';
+import { VSCodeTestRunner } from '../../../src/vscode/testing/core/test-runner';
+import { TestConfigurationManager } from '../../../src/vscode/testing/config/manager';
+import { MockFactory, AssertionHelpers } from '../utils/test-helpers';
+import { TestLogger } from '../../../src/vscode/utils/logger';
 
 // Mock Docker for testing
 const mockDocker = {
@@ -10,22 +10,22 @@ const mockDocker = {
   stopContainer: jest.fn(),
   removeContainer: jest.fn(),
   getContainerStats: jest.fn(),
-  listContainers: jest.fn()
+  listContainers: jest.fn(),
 };
 
 // Mock VS Code API for testing
 const mockVSCode = {
   commands: {
     executeCommand: jest.fn(),
-    registerCommand: jest.fn()
+    registerCommand: jest.fn(),
   },
   window: {
     showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn()
+    showErrorMessage: jest.fn(),
   },
   workspace: {
-    getConfiguration: jest.fn()
-  }
+    getConfiguration: jest.fn(),
+  },
 };
 
 describe('Container Startup Validation Integration', () => {
@@ -38,7 +38,7 @@ describe('Container Startup Validation Integration', () => {
     configManager = new TestConfigurationManager();
     const config = await configManager.loadConfiguration();
     testRunner = new VSCodeTestRunner(config);
-    
+
     // Reset mocks
     jest.clearAllMocks();
   });
@@ -53,12 +53,12 @@ describe('Container Startup Validation Integration', () => {
       // Arrange
       const containerConfig = MockFactory.createMockTestConfig();
       const expectedContainerId = 'test-container-123';
-      
+
       mockDocker.createContainer.mockResolvedValue({ id: expectedContainerId });
       mockDocker.startContainer.mockResolvedValue({ success: true });
       mockDocker.getContainerStats.mockResolvedValue({
         memory: { usage: 512, limit: 4096 },
-        cpu: { usage: 25, cores: 4 }
+        cpu: { usage: 25, cores: 4 },
       });
 
       // Act
@@ -70,7 +70,7 @@ describe('Container Startup Validation Integration', () => {
           return MockFactory.createMockTestResult({
             name: 'Container Startup Test',
             status: 'passed',
-            duration: 30000
+            duration: 30000,
           });
         },
         3
@@ -87,7 +87,7 @@ describe('Container Startup Validation Integration', () => {
       // Arrange
       const containerConfig = MockFactory.createMockTestConfig();
       const errorMessage = 'Container creation failed';
-      
+
       mockDocker.createContainer.mockRejectedValue(new Error(errorMessage));
 
       // Act
@@ -98,13 +98,13 @@ describe('Container Startup Validation Integration', () => {
             await mockDocker.createContainer(containerConfig.containerConfig);
             return MockFactory.createMockTestResult({
               name: 'Container Creation Test',
-              status: 'passed'
+              status: 'passed',
             });
           } catch (error) {
             return MockFactory.createMockTestResult({
               name: 'Container Creation Test',
               status: 'failed',
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         },
@@ -121,10 +121,10 @@ describe('Container Startup Validation Integration', () => {
       // Arrange
       const containerConfig = MockFactory.createMockTestConfig({ timeout: 5000 });
       const expectedContainerId = 'test-container-timeout';
-      
+
       mockDocker.createContainer.mockResolvedValue({ id: expectedContainerId });
-      mockDocker.startContainer.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 10000)) // 10 second delay
+      mockDocker.startContainer.mockImplementation(
+        () => new Promise(resolve => setTimeout(resolve, 10000)) // 10 second delay
       );
 
       // Act
@@ -136,13 +136,13 @@ describe('Container Startup Validation Integration', () => {
             await mockDocker.startContainer(containerId);
             return MockFactory.createMockTestResult({
               name: 'Container Startup Timeout Test',
-              status: 'passed'
+              status: 'passed',
             });
           } catch (error) {
             return MockFactory.createMockTestResult({
               name: 'Container Startup Timeout Test',
               status: 'failed',
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         },
@@ -161,9 +161,9 @@ describe('Container Startup Validation Integration', () => {
       const mockStats = {
         memory: { usage: 1024, limit: 4096 },
         cpu: { usage: 50, cores: 4 },
-        disk: { used: 2048, available: 2048 }
+        disk: { used: 2048, available: 2048 },
       };
-      
+
       mockDocker.getContainerStats.mockResolvedValue(mockStats);
 
       // Act
@@ -171,14 +171,14 @@ describe('Container Startup Validation Integration', () => {
         'resource-monitoring-test',
         async () => {
           const stats = await mockDocker.getContainerStats('test-container');
-          
+
           // Check memory usage is within reasonable bounds
           const memoryUsagePercent = (stats.memory.usage / stats.memory.limit) * 100;
           if (memoryUsagePercent > 80) {
             return MockFactory.createMockTestResult({
               name: 'Resource Monitoring Test',
               status: 'failed',
-              error: `Memory usage too high: ${memoryUsagePercent}%`
+              error: `Memory usage too high: ${memoryUsagePercent}%`,
             });
           }
 
@@ -187,7 +187,7 @@ describe('Container Startup Validation Integration', () => {
             return MockFactory.createMockTestResult({
               name: 'Resource Monitoring Test',
               status: 'failed',
-              error: `CPU usage too high: ${stats.cpu.usage}%`
+              error: `CPU usage too high: ${stats.cpu.usage}%`,
             });
           }
 
@@ -197,8 +197,8 @@ describe('Container Startup Validation Integration', () => {
             metrics: {
               executionTime: 1000,
               memoryUsage: stats.memory.usage,
-              cpuUsage: stats.cpu.usage
-            }
+              cpuUsage: stats.cpu.usage,
+            },
           });
         },
         1
@@ -216,9 +216,9 @@ describe('Container Startup Validation Integration', () => {
       const mockStats = {
         memory: { usage: 3500, limit: 4096 }, // 85% usage
         cpu: { usage: 30, cores: 4 },
-        disk: { used: 2048, available: 2048 }
+        disk: { used: 2048, available: 2048 },
       };
-      
+
       mockDocker.getContainerStats.mockResolvedValue(mockStats);
 
       // Act
@@ -227,18 +227,18 @@ describe('Container Startup Validation Integration', () => {
         async () => {
           const stats = await mockDocker.getContainerStats('test-container');
           const memoryUsagePercent = (stats.memory.usage / stats.memory.limit) * 100;
-          
+
           if (memoryUsagePercent > 80) {
             return MockFactory.createMockTestResult({
               name: 'Memory Threshold Test',
               status: 'failed',
-              error: `Memory usage exceeds threshold: ${memoryUsagePercent.toFixed(1)}%`
+              error: `Memory usage exceeds threshold: ${memoryUsagePercent.toFixed(1)}%`,
             });
           }
 
           return MockFactory.createMockTestResult({
             name: 'Memory Threshold Test',
-            status: 'passed'
+            status: 'passed',
           });
         },
         1
@@ -265,14 +265,14 @@ describe('Container Startup Validation Integration', () => {
         async () => {
           const createdContainerId = await mockDocker.createContainer({});
           await mockDocker.startContainer(createdContainerId);
-          
+
           // Simulate test cleanup
           await mockDocker.stopContainer(createdContainerId);
           await mockDocker.removeContainer(createdContainerId);
-          
+
           return MockFactory.createMockTestResult({
             name: 'Container Cleanup Test',
-            status: 'passed'
+            status: 'passed',
           });
         },
         1
@@ -288,7 +288,7 @@ describe('Container Startup Validation Integration', () => {
       // Arrange
       const containerId = 'test-container-cleanup-fail';
       const cleanupError = 'Container removal failed';
-      
+
       mockDocker.createContainer.mockResolvedValue({ id: containerId });
       mockDocker.startContainer.mockResolvedValue({ success: true });
       mockDocker.stopContainer.mockResolvedValue({ success: true });
@@ -301,18 +301,18 @@ describe('Container Startup Validation Integration', () => {
           const createdContainerId = await mockDocker.createContainer({});
           await mockDocker.startContainer(createdContainerId);
           await mockDocker.stopContainer(createdContainerId);
-          
+
           try {
             await mockDocker.removeContainer(createdContainerId);
             return MockFactory.createMockTestResult({
               name: 'Container Cleanup Fail Test',
-              status: 'passed'
+              status: 'passed',
             });
           } catch (error) {
             return MockFactory.createMockTestResult({
               name: 'Container Cleanup Fail Test',
               status: 'warning', // Warning because test passed but cleanup failed
-              error: `Cleanup failed: ${error instanceof Error ? error.message : String(error)}`
+              error: `Cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
             });
           }
         },
