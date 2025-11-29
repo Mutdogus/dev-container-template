@@ -1,0 +1,15 @@
+{
+  "name": "@playwright/mcp-server",
+  "version": "1.0.0",
+  "description": "Mock Playwright MCP Server for testing",
+  "main": "index.js",
+  "bin": {
+    "playwright-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

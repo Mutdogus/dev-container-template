@@ -1,0 +1,56 @@
+{
+  "registry": {
+    "context7": {
+      "id": "context7",
+      "name": "Context7 Code Intelligence",
+      "type": "code-intelligence",
+      "description": "Advanced code intelligence and API documentation lookup",
+      "endpoint": "http://localhost:3001",
+      "capabilities": [
+        "api-lookup",
+        "code-context",
+        "documentation"
+      ],
+      "languages": [
+        "javascript",
+        "typescript",
+        "python",
+        "go",
+        "rust"
+      ],
+      "status": "installed",
+      "version": "1.0.0",
+      "metadata": {
+        "author": "Context7 Team",
+        "license": "MIT",
+        "repository": "https://github.com/context7/mcp-server"
+      }
+    },
+    "playwright": {
+      "id": "playwright",
+      "name": "Playwright Web Automation",
+      "type": "web-automation",
+      "description": "Web automation and testing with Playwright",
+      "endpoint": "http://localhost:3002",
+      "capabilities": [
+        "web-testing",
+        "browser-automation",
+        "screenshots"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "status": "installed",
+      "version": "1.0.0",
+      "metadata": {
+        "author": "Playwright Team",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/microsoft/playwright-mcp"
+      }
+    }
+  },
+  "last_updated": "2025-01-28T10:30:00Z",
+  "schema_version": "1.0"
+}

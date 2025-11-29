@@ -1,0 +1,26 @@
+{
+  "$schema": "https://opencode.ai/mcp-config.json",
+  "version": "1.0.0",
+  "client": {
+    "max_connections": 10,
+    "connection_timeout": 30000,
+    "retry_policy": {
+      "max_attempts": 3,
+      "backoff_multiplier": 2.0,
+      "initial_delay": 1000,
+      "max_delay": 30000
+    },
+    "security": {
+      "verify_certificates": true,
+      "allowed_hosts": ["localhost", "127.0.0.1"],
+      "api_key_encryption": true
+    }
+  },
+  "servers": [],
+  "logging": {
+    "level": "info",
+    "file": ".mcp/logs/client.log",
+    "max_size": "10MB",
+    "retention": 7
+  }
+}

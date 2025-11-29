@@ -1,6 +1,9 @@
 {
   "name": "Spec-kit / OpenCode Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:latest",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
@@ -9,12 +12,36 @@
       "extensions": [
         "GitHub.copilot",
         "tanishqkancharla.opencode-vscode",
-        "ms-vscode-remote.remote-containers",
-        "ms-vscode-remote.remote-ssh"
-      ]
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.pylint"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.linting.pylintEnabled": true,
+        "terminal.integrated.shell.linux": "/bin/bash"
+      }
     }
   },
   "forwardPorts": [3000, 8000, 5432],
-  "postCreateCommand": "bash -lc \"python --version && pip install -r requirements.txt 2>/dev/null || true\"",
-  "remoteUser": "vscode"
+  "postCreateCommand": "echo 'Container ready for development' && opencode --version",
+  "remoteUser": "vscode",
+  "portsAttributes": {
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Application Server",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "Database",
+      "onAutoForward": "silent"
+    }
+  }
 }

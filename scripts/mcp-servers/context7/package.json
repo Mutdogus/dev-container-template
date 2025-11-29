@@ -1,0 +1,15 @@
+{
+  "name": "@context7/mcp-server",
+  "version": "1.0.0",
+  "description": "Mock Context7 MCP Server for testing",
+  "main": "index.js",
+  "bin": {
+    "context7-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "context7",
+  "name": "Context7 Code Intelligence",
+  "type": "code-intelligence",
+  "endpoint": "http://localhost:3001",
+  "capabilities": [
+    "api-lookup",
+    "code-context",
+    "documentation",
+    "symbol-search",
+    "type-information"
+  ],
+  "configuration": {
+    "languages": [
+      "javascript",
+      "typescript",
+      "python",
+      "go",
+      "rust",
+      "java",
+      "csharp"
+    ],
+    "cache": {
+      "enabled": true,
+      "max_size": "1GB",
+      "ttl": 3600000
+    },
+    "api_sources": [
+      {
+        "name": "MDN",
+        "url": "https://developer.mozilla.org/api/v1",
+        "priority": 1
+      },
+      {
+        "name": "DevDocs",
+        "url": "https://devdocs.io/api",
+        "priority": 2
+      }
+    ],
+    "performance": {
+      "max_concurrent_requests": 5,
+      "request_timeout": 10000
+    }
+  },
+  "metadata": {
+    "description": "Advanced code intelligence and API documentation lookup",
+    "author": "Context7 Team",
+    "license": "MIT",
+    "repository": "https://github.com/context7/mcp-server",
+    "documentation": "https://docs.context7.ai"
+  }
+}

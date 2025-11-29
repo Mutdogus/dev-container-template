@@ -1,0 +1,67 @@
+{
+  "id": "playwright",
+  "name": "Playwright Web Automation",
+  "type": "web-automation",
+  "endpoint": "http://localhost:3002",
+  "capabilities": [
+    "web-testing",
+    "browser-automation",
+    "screenshot-capture",
+    "video-recording",
+    "accessibility-testing"
+  ],
+  "configuration": {
+    "browsers": [
+      {
+        "name": "chromium",
+        "version": "latest",
+        "default": true
+      },
+      {
+        "name": "firefox",
+        "version": "latest"
+      },
+      {
+        "name": "webkit",
+        "version": "latest"
+      }
+    ],
+    "default_mode": "headless",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "timeout": {
+      "navigation": 30000,
+      "action": 10000,
+      "expectation": 5000
+    },
+    "media": {
+      "screenshots": {
+        "enabled": true,
+        "format": "png",
+        "quality": 80
+      },
+      "videos": {
+        "enabled": false,
+        "format": "webm",
+        "size": {
+          "width": 1280,
+          "height": 720
+        }
+      }
+    },
+    "testing": {
+      "frameworks": ["jest", "vitest", "playwright"],
+      "parallel_execution": true,
+      "max_workers": 4
+    }
+  },
+  "metadata": {
+    "description": "Web automation and testing with Playwright",
+    "author": "Playwright Team",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/microsoft/playwright-mcp",
+    "documentation": "https://playwright.dev/docs/mcp"
+  }
+}
