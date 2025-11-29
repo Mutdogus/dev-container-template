@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: VS Code Container Launch API
+  description: API for validating and launching VS Code dev containers
+  version: 1.0.0
+
+paths:
+  /validate:
+    post:
+      summary: Validate devcontainer.json configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+
+  /launch:
+    post:
+      summary: Launch dev container
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LaunchRequest'
+      responses:
+        '200':
+          description: Launch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LaunchResponse'
+
+  /environment:
+    get:
+      summary: Get Docker environment status
+      responses:
+        '200':
+          description: Environment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentStatus'
+
+  /errors/{errorId}/recovery:
+    get:
+      summary: Get recovery actions for an error
+      parameters:
+        - name: errorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recovery actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryActions'
+
+components:
+  schemas:
+    ValidationRequest:
+      type: object
+      required:
+        - configPath
+      properties:
+        configPath:
+          type: string
+          description: Path to devcontainer.json file
+        configContent:
+          type: string
+          description: Raw devcontainer.json content (optional)
+
+    ValidationError:
+      type: object
+      required:
+        - code
+        - severity
+        - message
+        - field
+      properties:
+        code:
+          type: string
+          description: Error code
+        severity:
+          type: string
+          enum: [error, warning, info]
+        message:
+          type: string
+          description: Human-readable description
+        field:
+          type: string
+          description: JSON path to problematic field
+        suggestion:
+          type: string
+          description: Recommended fix
+        line:
+          type: integer
+          description: Line number in source file
+        column:
+          type: integer
+          description: Column position
+
+    ValidationResponse:
+      type: object
+      required:
+        - isValid
+        - errors
+      properties:
+        isValid:
+          type: boolean
+          description: Configuration validation status
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        parsedConfig:
+          type: object
+          description: Parsed configuration object
+
+    LaunchRequest:
+      type: object
+      required:
+        - configPath
+      properties:
+        configPath:
+          type: string
+          description: Path to devcontainer.json file
+        forceRebuild:
+          type: boolean
+          description: Force container rebuild
+        skipExtensions:
+          type: boolean
+          description: Skip VS Code extensions installation
+
+    LaunchResponse:
+      type: object
+      required:
+        - launchId
+        - status
+      properties:
+        launchId:
+          type: string
+          description: Unique launch attempt identifier
+        status:
+          type: string
+          enum: [pending, building, running, failed, completed]
+        currentStep:
+          type: string
+          description: Current launch phase
+        startTime:
+          type: string
+          format: date-time
+          description: Launch attempt start time
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerError'
+        metrics:
+          $ref: '#/components/schemas/LaunchMetrics'
+
+    ContainerError:
+      type: object
+      required:
+        - id
+        - type
+        - code
+        - message
+        - timestamp
+      properties:
+        id:
+          type: string
+          description: Unique error identifier
+        type:
+          type: string
+          enum: [validation, docker, network, permission, extension, unknown]
+        code:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error description
+        details:
+          type: object
+          description: Additional error context
+        timestamp:
+          type: string
+          format: date-time
+          description: When error occurred
+        step:
+          type: string
+          description: Launch phase where error occurred
+
+    RecoveryAction:
+      type: object
+      required:
+        - id
+        - type
+        - title
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique action identifier
+        type:
+          type: string
+          enum: [manual, automated, configuration, installation]
+        title:
+          type: string
+          description: Action title
+        description:
+          type: string
+          description: Detailed description
+        steps:
+          type: array
+          items:
+            type: string
+          description: Step-by-step instructions
+        command:
+          type: string
+          description: Command to execute (if applicable)
+        automated:
+          type: boolean
+          description: Whether action can be performed automatically
+        estimatedTime:
+          type: number
+          description: Estimated time to complete (minutes)
+
+    RecoveryActions:
+      type: object
+      required:
+        - errorId
+        - actions
+      properties:
+        errorId:
+          type: string
+          description: Error identifier
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecoveryAction'
+
+    EnvironmentStatus:
+      type: object
+      required:
+        - isRunning
+        - version
+      properties:
+        isRunning:
+          type: boolean
+          description: Docker daemon status
+        version:
+          type: string
+          description: Docker engine version
+        apiVersion:
+          type: string
+          description: Docker API version
+        availableImages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DockerImage'
+        diskSpace:
+          $ref: '#/components/schemas/DiskSpaceInfo'
+        permissions:
+          $ref: '#/components/schemas/PermissionStatus'
+        networkConnectivity:
+          type: boolean
+          description: External network access
+
+    DockerImage:
+      type: object
+      required:
+        - name
+        - tag
+      properties:
+        name:
+          type: string
+          description: Image name
+        tag:
+          type: string
+          description: Image tag
+        size:
+          type: integer
+          description: Image size in bytes
+        created:
+          type: string
+          format: date-time
+          description: Creation timestamp
+
+    DiskSpaceInfo:
+      type: object
+      required:
+        - total
+        - available
+      properties:
+        total:
+          type: integer
+          description: Total disk space
+        available:
+          type: integer
+          description: Available disk space
+        required:
+          type: integer
+          description: Estimated required space
+
+    PermissionStatus:
+      type: object
+      required:
+        - canRunDocker
+      properties:
+        canRunDocker:
+          type: boolean
+          description: Docker execution permission
+        canManageContainers:
+          type: boolean
+          description: Container management permission
+        canAccessDockerSocket:
+          type: boolean
+          description: Docker socket access
+        currentUser:
+          type: string
+          description: Current user name
+        dockerGroup:
+          type: boolean
+          description: Member of docker group
+
+    LaunchMetrics:
+      type: object
+      properties:
+        validationTime:
+          type: integer
+          description: Time spent on validation (ms)
+        buildTime:
+          type: integer
+          description: Container build time (ms)
+        startTime:
+          type: integer
+          description: Container start time (ms)
+        totalTime:
+          type: integer
+          description: Total launch time (ms)
+        imageSize:
+          type: integer
+          description: Final image size (bytes)
