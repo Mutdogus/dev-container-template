@@ -1,0 +1,534 @@
+openapi: 3.0.3
+info:
+  title: GitHub MCP Server API
+  description: API for GitHub MCP server operations and speckit integration
+  version: 1.0.0
+
+paths:
+  /mcp/configure:
+    post:
+      summary: Configure MCP server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MCPConfigurationRequest'
+      responses:
+        '200':
+          description: Configuration result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPConfigurationResponse'
+
+  /mcp/status:
+    get:
+      summary: Get MCP server status
+      responses:
+        '200':
+          description: Server status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPStatusResponse'
+
+  /github/authenticate:
+    post:
+      summary: Authenticate with GitHub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GitHubAuthRequest'
+      responses:
+        '200':
+          description: Authentication result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitHubAuthResponse'
+
+  /github/repositories:
+    get:
+      summary: List accessible repositories
+      responses:
+        '200':
+          description: Repository list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryListResponse'
+
+  /github/issues/create:
+    post:
+      summary: Create GitHub issue from speckit task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueRequest'
+      responses:
+        '200':
+          description: Issue creation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateIssueResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /github/issues/{issueId}:
+    get:
+      summary: Get GitHub issue details
+      parameters:
+        - name: issueId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetailsResponse'
+
+  /speckit/tasks:
+    get:
+      summary: Get speckit tasks for conversion
+      responses:
+        '200':
+          description: Task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeckitTasksResponse'
+
+  /speckit/convert:
+    post:
+      summary: Convert speckit tasks to GitHub issues
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertTasksRequest'
+      responses:
+        '200':
+          description: Conversion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertTasksResponse'
+
+components:
+  schemas:
+    MCPConfigurationRequest:
+      type: object
+      required:
+        - serverName
+        - authType
+      properties:
+        serverName:
+          type: string
+          description: MCP server identifier
+        authType:
+          type: string
+          enum: [oauth, pat, app]
+          description: Authentication type
+        clientId:
+          type: string
+          description: GitHub OAuth client ID (OAuth only)
+        clientSecret:
+          type: string
+          description: GitHub OAuth client secret (OAuth only)
+        token:
+          type: string
+          description: GitHub personal access token (PAT only)
+        repository:
+          type: string
+          description: Default repository
+        timeout:
+          type: integer
+          description: Request timeout in milliseconds
+
+    MCPConfigurationResponse:
+      type: object
+      required:
+        - success
+        - configured
+      properties:
+        success:
+          type: boolean
+          description: Configuration successful
+        configured:
+          type: boolean
+          description: Server is configured
+        serverName:
+          type: string
+          description: Configured server name
+        repository:
+          type: string
+          description: Default repository
+        authType:
+          type: string
+          description: Authentication type used
+
+    MCPStatusResponse:
+      type: object
+      required:
+        - running
+        - serverName
+      properties:
+        running:
+          type: boolean
+          description: Server is running
+        serverName:
+          type: string
+          description: Server name
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        activeConnections:
+          type: integer
+          description: Active MCP connections
+        lastError:
+          type: string
+          description: Last error message
+
+    GitHubAuthRequest:
+      type: object
+      required:
+        - authType
+      properties:
+        authType:
+          type: string
+          enum: [oauth, pat, app]
+          description: Authentication type
+        clientId:
+          type: string
+          description: GitHub OAuth client ID (OAuth only)
+        clientSecret:
+          type: string
+          description: GitHub OAuth client secret (OAuth only)
+        token:
+          type: string
+          description: GitHub personal access token (PAT only)
+        scopes:
+          type: array
+          items:
+            type: string
+          description: Required GitHub scopes
+
+    GitHubAuthResponse:
+      type: object
+      required:
+        - success
+        - authenticated
+      properties:
+        success:
+          type: boolean
+          description: Authentication successful
+        authenticated:
+          type: boolean
+          description: User is authenticated
+        authType:
+          type: string
+          description: Authentication type used
+        scopes:
+          type: array
+          items:
+            type: string
+          description: Granted scopes
+        expiresAt:
+          type: string
+          format: date-time
+          description: Token expiration time
+
+    RepositoryListResponse:
+      type: object
+      required:
+        - repositories
+      properties:
+        repositories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repository'
+        totalCount:
+          type: integer
+          description: Total repository count
+
+    Repository:
+      type: object
+      required:
+        - name
+        - owner
+        - permissions
+      properties:
+        name:
+          type: string
+          description: Repository name
+        owner:
+          type: string
+          description: Repository owner
+        isPrivate:
+          type: boolean
+          description: Repository is private
+        defaultBranch:
+          type: string
+          description: Default branch
+        permissions:
+          type: object
+          properties:
+            pull:
+              type: boolean
+            push:
+              type: boolean
+            admin:
+              type: boolean
+            issues:
+              type: boolean
+
+    CreateIssueRequest:
+      type: object
+      required:
+        - repository
+        - title
+        - body
+      properties:
+        repository:
+          type: string
+          description: Repository name (owner/repo)
+        title:
+          type: string
+          description: Issue title
+        body:
+          type: string
+          description: Issue body content
+        labels:
+          type: array
+          items:
+            type: string
+          description: Issue labels
+        assignees:
+          type: array
+          items:
+            type: string
+          description: Issue assignees
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Issue priority
+        taskId:
+          type: string
+          description: Associated speckit task ID
+
+    CreateIssueResponse:
+      type: object
+      required:
+        - success
+        - issue
+      properties:
+        success:
+          type: boolean
+          description: Issue creation successful
+        issue:
+          $ref: '#/components/schemas/Issue'
+        error:
+          type: string
+          description: Error message if failed
+
+    Issue:
+      type: object
+      required:
+        - id
+        - url
+        - title
+      properties:
+        id:
+          type: integer
+          description: Issue number
+        url:
+          type: string
+          description: Issue URL
+        title:
+          type: string
+          description: Issue title
+        body:
+          type: string
+          description: Issue body
+        state:
+          type: string
+          enum: [open, closed, locked]
+          description: Issue state
+        labels:
+          type: array
+          items:
+            type: string
+          description: Issue labels
+        assignees:
+          type: array
+          items:
+            type: string
+          description: Issue assignees
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        taskId:
+          type: string
+          description: Associated speckit task ID
+
+    IssueDetailsResponse:
+      type: object
+      required:
+        - issue
+      properties:
+        issue:
+          $ref: '#/components/schemas/Issue'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error description
+        details:
+          type: object
+          description: Additional error context
+
+    SpeckitTasksResponse:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpeckitTask'
+        totalCount:
+          type: integer
+          description: Total task count
+
+    SpeckitTask:
+      type: object
+      required:
+        - id
+        - title
+        - description
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        title:
+          type: string
+          description: Task title
+        description:
+          type: string
+          description: Task description
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority
+        story:
+          type: string
+          description: Associated user story
+        status:
+          type: string
+          enum: [pending, in-progress, completed]
+          description: Task status
+        dependencies:
+          type: array
+          items:
+            type: string
+          description: Task dependencies
+        metadata:
+          type: object
+          description: Additional task metadata
+
+    ConvertTasksRequest:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            type: string
+          description: Task IDs to convert
+        repository:
+          type: string
+          description: Target repository
+        createMissing:
+          type: boolean
+          description: Create missing tasks
+        updateExisting:
+          type: boolean
+          description: Update existing issues
+
+    ConvertTasksResponse:
+      type: object
+      required:
+        - success
+        - results
+      properties:
+        success:
+          type: boolean
+          description: Conversion successful
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversionResult'
+        totalProcessed:
+          type: integer
+          description: Total tasks processed
+        created:
+          type: integer
+          description: Issues created
+        updated:
+          type: integer
+          description: Issues updated
+        skipped:
+          type: integer
+          description: Tasks skipped
+
+    ConversionResult:
+      type: object
+      required:
+        - taskId
+        - result
+      properties:
+        taskId:
+          type: string
+          description: Speckit task ID
+        result:
+          type: string
+          enum: [created, updated, skipped, error]
+          description: Conversion result
+        issueId:
+          type: integer
+          description: GitHub issue number
+        issueUrl:
+          type: string
+          description: GitHub issue URL
+        error:
+          type: string
+          description: Error message if failed
