@@ -1,0 +1,14 @@
+{
+  "id": "T001",
+  "title": "Create project structure per implementation plan",
+  "description": "Set up the basic directory structure for the GitHub MCP server project according to the implementation plan",
+  "priority": "high",
+  "story": "US1",
+  "status": "pending",
+  "dependencies": [],
+  "metadata": {
+    "estimatedHours": 1,
+    "complexity": "low",
+    "tags": ["setup", "infrastructure"]
+  }
+}

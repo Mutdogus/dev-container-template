@@ -1,0 +1,54 @@
+[
+  {
+    "id": "T001",
+    "title": "Create project structure per implementation plan",
+    "description": "Set up the basic directory structure for the GitHub MCP server project",
+    "priority": "high",
+    "story": "US1",
+    "status": "completed",
+    "dependencies": [],
+    "metadata": {
+      "estimatedHours": 1,
+      "complexity": "low"
+    }
+  },
+  {
+    "id": "T002",
+    "title": "Initialize Node.js project with TypeScript and MCP dependencies",
+    "description": "Set up package.json with required dependencies for MCP server development",
+    "priority": "high",
+    "story": "US1",
+    "status": "completed",
+    "dependencies": ["T001"],
+    "metadata": {
+      "estimatedHours": 2,
+      "complexity": "low"
+    }
+  },
+  {
+    "id": "T003",
+    "title": "Configure ESLint and Prettier for TypeScript",
+    "description": "Set up code formatting and linting tools for consistent code quality",
+    "priority": "medium",
+    "story": "US1",
+    "status": "completed",
+    "dependencies": ["T002"],
+    "metadata": {
+      "estimatedHours": 1,
+      "complexity": "low"
+    }
+  },
+  {
+    "id": "T004",
+    "title": "Setup esbuild for bundling",
+    "description": "Configure esbuild for fast TypeScript compilation and bundling",
+    "priority": "medium",
+    "story": "US1",
+    "status": "pending",
+    "dependencies": ["T002"],
+    "metadata": {
+      "estimatedHours": 1,
+      "complexity": "medium"
+    }
+  }
+]

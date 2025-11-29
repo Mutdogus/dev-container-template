@@ -29,14 +29,14 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize Node.js project with TypeScript and MCP dependencies
-- [ ] T003 [P] Configure ESLint and Prettier for TypeScript
-- [ ] T004 [P] Setup esbuild for bundling
-- [ ] T005 [P] Configure Jest + Supertest testing framework
-- [ ] T006 Create package.json with scripts for build, test, and start
-- [ ] T007 [P] Setup TypeScript configuration (tsconfig.json)
-- [ ] T008 [P] Create environment configuration template (.env.example)
+- [X] T001 Create project structure per implementation plan
+- [X] T002 Initialize Node.js project with TypeScript and MCP dependencies
+- [X] T003 [P] Configure ESLint and Prettier for TypeScript
+- [X] T004 [P] Setup esbuild for bundling
+- [X] T005 [P] Configure Jest + Supertest testing framework
+- [X] T006 Create package.json with scripts for build, test, and start
+- [X] T007 [P] Setup TypeScript configuration (tsconfig.json)
+- [X] T008 [P] Create environment configuration template (.env.example)
 
 ---
 
@@ -46,15 +46,15 @@ description: "Task list template for feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 Create base TypeScript interfaces for core entities in src/types/
-- [ ] T010 [P] Implement logger utility in src/utils/logger.ts
-- [ ] T011 [P] Implement configuration parser in src/utils/config.ts
-- [ ] T012 Create error handling framework in src/utils/errors.ts
-- [ ] T013 [P] Setup MCP server framework in src/server/mcp/
-- [ ] T014 [P] Setup GitHub client wrapper in src/server/github/
-- [ ] T015 Create MCP server entry point in src/server/index.ts
-- [ ] T016 [P] Setup test fixtures directory structure in tests/fixtures/
-- [ ] T017 Create base test utilities in tests/test-utils.ts
+- [X] T009 Create base TypeScript interfaces for core entities in src/types/
+- [X] T010 [P] Implement logger utility in src/utils/logger.ts
+- [X] T011 [P] Implement configuration parser in src/utils/config.ts
+- [X] T012 Create error handling framework in src/utils/errors.ts
+- [X] T013 [P] Setup MCP server framework in src/server/mcp/
+- [X] T014 [P] Setup GitHub client wrapper in src/server/github/
+- [X] T015 Create MCP server entry point in src/server/index.ts
+- [X] T016 [P] Setup test fixtures directory structure in tests/fixtures/
+- [X] T017 Create base test utilities in tests/test-utils.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -70,27 +70,27 @@ description: "Task list template for feature implementation"
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T018 [P] [US1] Integration test for MCP server startup in tests/integration/test-mcp-server.ts
-- [ ] T019 [P] [US1] Unit test for GitHub authentication in tests/unit/test-github-auth.ts
-- [ ] T020 [P] [US1] Integration test for task-to-issue conversion in tests/integration/test-task-conversion.ts
+- [X] T018 [P] [US1] Integration test for MCP server startup in tests/integration/test-mcp-server.ts
+- [X] T019 [P] [US1] Unit test for GitHub authentication in tests/unit/test-github-auth.ts
+- [X] T020 [P] [US1] Integration test for task-to-issue conversion in tests/integration/test-task-conversion.ts
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Create MCPServerConfiguration interface in src/types/mcp-config.ts
-- [ ] T022 [P] [US1] Create GitHubAuthentication interface in src/types/github-auth.ts
-- [ ] T023 [P] [US1] Create SpeckitTask interface in src/types/speckit-task.ts
-- [ ] T024 [P] [US1] Create GitHubIssue interface in src/types/github-issue.ts
-- [ ] T025 [US1] Implement MCP server core in src/server/mcp/server.ts
-- [ ] T026 [US1] Implement GitHub OAuth authentication in src/server/github/auth/oauth.ts
-- [ ] T027 [US1] Implement GitHub API client in src/server/github/api/client.ts
-- [ ] T028 [US1] Implement task-to-issue conversion in src/server/github/issues/converter.ts
-- [ ] T029 [US1] Create MCP tools for GitHub operations in src/server/mcp/tools/github-tools.ts
-- [ ] T030 [US1] Implement MCP tool handlers in src/server/mcp/handlers/
-- [ ] T031 [US1] Add GitHub issue creation tool to MCP server in src/server/mcp/
-- [ ] T032 [US1] Add task conversion tool to MCP server in src/server/mcp/
-- [ ] T033 [US1] Register MCP tools with server in src/server/mcp/server.ts
-- [ ] T034 [US1] Add error handling for GitHub API failures in src/server/github/
-- [ ] T035 [US1] Add logging for MCP server operations in src/utils/logger.ts
+- [X] T021 [P] [US1] Create MCPServerConfiguration interface in src/types/mcp-config.ts
+- [X] T022 [P] [US1] Create GitHubAuthentication interface in src/types/github-auth.ts
+- [X] T023 [P] [US1] Create SpeckitTask interface in src/types/speckit-task.ts
+- [X] T024 [P] [US1] Create GitHubIssue interface in src/types/github-issue.ts
+- [X] T025 [US1] Implement MCP server core in src/server/mcp/server.ts
+- [X] T026 [US1] Implement GitHub OAuth authentication in src/server/github/auth/oauth.ts
+- [X] T027 [US1] Implement GitHub API client in src/server/github/api/client.ts
+- [X] T028 [US1] Implement task-to-issue conversion in src/server/github/issues/converter.ts
+- [X] T029 [US1] Create MCP tools for GitHub operations in src/server/mcp/tools/github-tools.ts
+- [X] T030 [US1] Implement MCP tool handlers in src/server/mcp/handlers/
+- [X] T031 [US1] Add GitHub issue creation tool to MCP server in src/server/mcp/
+- [X] T032 [US1] Add task conversion tool to MCP server in src/server/mcp/
+- [X] T033 [US1] Register MCP tools with server in src/server/mcp/server.ts
+- [X] T034 [US1] Add error handling for GitHub API failures in src/server/github/
+- [X] T035 [US1] Add logging for MCP server operations in src/utils/logger.ts
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 

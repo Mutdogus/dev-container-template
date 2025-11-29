@@ -1,0 +1,18 @@
+{
+  "name": "test-repo",
+  "owner": "testuser",
+  "isPrivate": false,
+  "permissions": {
+    "pull": true,
+    "push": true,
+    "admin": false,
+    "issues": true
+  },
+  "defaultBranch": "main",
+  "apiLimits": {
+    "limit": 5000,
+    "remaining": 4999,
+    "used": 1,
+    "resetTime": "2025-11-29T12:00:00.000Z"
+  }
+}
