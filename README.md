@@ -31,7 +31,11 @@ docker --version
 ### 1. OpenCode (TUI + GUI)
 
 - **OpenCode TUI**: Terminal-based AI coding agent
-- **OpenCode VS Code Extension**: GUI integration in VS Code Insiders
+  - **Repository**: https://github.com/opencode/opencode
+- **Installation**: `curl -fsSL https://opencode.ai/install | bash`
+- **VS Code Extension**: GUI integration in VS Code Insiders
+  - **Repository**: https://github.com/tanishqkancharla/opencode-vscode
+  - **Installation**: `code-insiders --install-extension tanishqkancharla.opencode-vscode`
 - Works with local or remote LLM models
 
 See [README-opencode.md](README-opencode.md) for detailed setup and usage.
@@ -69,6 +73,7 @@ The install wrapper (`configure-coding-environment.sh`) automatically runs these
 - **`scripts/install-opencode.sh`** — Installs OpenCode TUI and VS Code extension
 - **`scripts/install-spec-kit.sh`** — Installs uv package manager and specify-cli
 - **`scripts/configure-env.sh`** — Updates shell configuration (PATH for uv tools)
+- **Used in this project**: Complete devcontainer implementation with OpenCode CLI integration
 
 Features:
 
@@ -80,6 +85,7 @@ Features:
 - ✅ Installs OpenCode VS Code extension
 - ✅ Installs `uv` package manager
 - ✅ Installs Spec-Kit CLI (`specify`)
+- ✅ **Used in this project**: Complete devcontainer implementation with OpenCode CLI integration
 - ✅ Updates shell configuration (`.zshrc`, `.bashrc`)
 - ✅ All scripts are idempotent (safe to run multiple times)
 
