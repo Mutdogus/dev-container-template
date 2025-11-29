@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-11-29
 
 ## Active Technologies
+- TypeScript 5.3+ with Node.js 18+ + @vscode/test-electron, @vscode/extension-test-runner, dockerode, @types/vscode (001-vscode-test)
+- Test results and configuration files (001-vscode-test)
 
 - **Language**: TypeScript 5.3+ with Node.js 18+
 - **Primary Dependencies**: @types/vscode, @docker/extension-api-client, dockerode ^3.3.5
@@ -82,6 +84,7 @@ docker images           # List available images
 - Maintain high test coverage
 
 ## Recent Changes
+- 001-vscode-test: Added TypeScript 5.3+ with Node.js 18+ + @vscode/test-electron, @vscode/extension-test-runner, dockerode, @types/vscode
 
 ### Feature 001-fix-container (2025-11-29)
 - Added TypeScript 5.3+ with Node.js 18+ for VS Code extension development

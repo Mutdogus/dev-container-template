@@ -1,0 +1,56 @@
+{
+  "testConfigurations": [
+    {
+      "name": "basic-container-test",
+      "vscodeVersion": "stable",
+      "containerImage": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+      "extensions": ["ms-vscode.cpptools"],
+      "expectedExtensions": 1,
+      "timeout": 30000
+    },
+    {
+      "name": "multi-extension-test",
+      "vscodeVersion": "stable",
+      "containerImage": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+      "extensions": ["ms-python.python", "ms-vscode.vscode-typescript-next"],
+      "expectedExtensions": 2,
+      "timeout": 45000
+    },
+    {
+      "name": "insiders-test",
+      "vscodeVersion": "insiders",
+      "containerImage": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+      "extensions": ["ms-vscode.cpptools"],
+      "expectedExtensions": 1,
+      "timeout": 30000
+    }
+  ],
+  "mockContainers": [
+    {
+      "id": "test-container-1",
+      "name": "vscode-test-basic",
+      "status": "running",
+      "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+      "ports": {
+        "3000": 3000
+      },
+      "environment": {
+        "NODE_ENV": "test"
+      }
+    },
+    {
+      "id": "test-container-2",
+      "name": "vscode-test-full",
+      "status": "running",
+      "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+      "ports": {
+        "3000": 3000,
+        "8080": 8080
+      },
+      "environment": {
+        "NODE_ENV": "test",
+        "DEBUG_TESTS": "true"
+      }
+    }
+  ]
+}

@@ -22,6 +22,7 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/tests/test-utils.ts'],
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@vscode/(.*)$': '<rootDir>/src/vscode/$1',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 30000,

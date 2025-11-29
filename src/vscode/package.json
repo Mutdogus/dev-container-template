@@ -1,0 +1,84 @@
+{
+  "name": "vscode-testing-integration",
+  "displayName": "VS Code Testing Integration",
+  "description": "Automated testing integration for VS Code development containers",
+  "version": "1.0.0",
+  "publisher": "dev-container-template",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "testing",
+    "container",
+    "automation",
+    "dev-container"
+  ],
+  "activationEvents": [
+    "onCommand:vscodeTesting.runTests",
+    "onCommand:vscodeTesting.validateContainer",
+    "onCommand:vscodeTesting.testExtensions"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscodeTesting.runTests",
+        "title": "Run VS Code Tests",
+        "category": "VS Code Testing"
+      },
+      {
+        "command": "vscodeTesting.validateContainer",
+        "title": "Validate Container",
+        "category": "VS Code Testing"
+      },
+      {
+        "command": "vscodeTesting.testExtensions",
+        "title": "Test Extensions",
+        "category": "VS Code Testing"
+      }
+    ],
+    "configuration": {
+      "title": "VS Code Testing",
+      "properties": {
+        "vscodeTesting.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Test execution timeout in milliseconds"
+        },
+        "vscodeTesting.parallel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run tests in parallel when possible"
+        },
+        "vscodeTesting.memoryThreshold": {
+          "type": "number",
+          "default": 2,
+          "description": "Memory warning threshold in GB"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.3.2",
+    "@vscode/test-electron": "^2.3.8"
+  }
+}
