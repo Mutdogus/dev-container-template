@@ -1,0 +1,65 @@
+{
+  "vscode": {
+    "versions": ["stable", "insiders"],
+    "extensions": [
+      {
+        "id": "ms-vscode.cpptools",
+        "name": "C/C++",
+        "version": "1.0.0",
+        "publisher": "Microsoft"
+      },
+      {
+        "id": "ms-python.python",
+        "name": "Python",
+        "version": "2023.0.0",
+        "publisher": "Microsoft"
+      },
+      {
+        "id": "ms-vscode.vscode-typescript-next",
+        "name": "TypeScript Next",
+        "version": "5.0.0",
+        "publisher": "Microsoft"
+      }
+    ]
+  },
+  "containers": {
+    "baseImage": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+    "testContainers": [
+      {
+        "name": "vscode-test-basic",
+        "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+        "environment": {
+          "NODE_ENV": "test"
+        }
+      },
+      {
+        "name": "vscode-test-full",
+        "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:18",
+        "environment": {
+          "NODE_ENV": "test",
+          "DEBUG_TESTS": "true"
+        }
+      }
+    ]
+  },
+  "testConfigurations": {
+    "default": {
+      "timeout": 30000,
+      "parallel": true,
+      "retryCount": 3,
+      "memoryThreshold": 2048
+    },
+    "ci": {
+      "timeout": 60000,
+      "parallel": false,
+      "retryCount": 1,
+      "memoryThreshold": 4096
+    },
+    "development": {
+      "timeout": 15000,
+      "parallel": true,
+      "retryCount": 5,
+      "memoryThreshold": 1024
+    }
+  }
+}

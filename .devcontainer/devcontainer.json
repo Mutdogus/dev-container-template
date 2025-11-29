@@ -4,9 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
-  },
+
   "customizations": {
     "vscode": {
       "extensions": [
@@ -27,19 +25,19 @@
       }
     }
   },
-  "forwardPorts": [3000, 8000, 5432],
+  "forwardPorts": [3001, 8001, 5433],
   "postCreateCommand": "echo 'Container ready for development' && opencode --version",
   "remoteUser": "vscode",
   "portsAttributes": {
-    "3000": {
+    "3001": {
       "label": "Development Server",
       "onAutoForward": "notify"
     },
-    "8000": {
+    "8001": {
       "label": "Application Server",
       "onAutoForward": "notify"
     },
-    "5432": {
+    "5433": {
       "label": "Database",
       "onAutoForward": "silent"
     }

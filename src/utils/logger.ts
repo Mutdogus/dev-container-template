@@ -40,7 +40,7 @@ export class Logger {
     const level = LogLevel[entry.level].padEnd(5);
     const context = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
     const error = entry.error ? `\n${entry.error.stack}` : '';
-    
+
     return `[${timestamp}] ${level} ${entry.message}${context}${error}`;
   }
 
@@ -50,7 +50,7 @@ export class Logger {
     }
 
     const formatted = this.formatLog(entry);
-    
+
     switch (entry.level) {
       case LogLevel.ERROR:
         console.error(formatted);

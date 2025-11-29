@@ -1,5 +1,6 @@
 export interface GitHubIssue {
-  id: number;
+  id: string;
+  number: number;
   url: string;
   title: string;
   body: string;
@@ -8,7 +9,7 @@ export interface GitHubIssue {
   assignees: string[];
   createdAt: Date;
   updatedAt: Date;
-  taskId: string;
+  taskId?: string;
 }
 
 export interface GitHubRepository {

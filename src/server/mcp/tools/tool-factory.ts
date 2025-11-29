@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import type { MCPTool } from '../../types/mcp-tool.js';
-import { logger } from '../../utils/logger.js';
+import type { MCPTool } from '../../../types/mcp-tool.js';
+import { logger } from '../../../utils/logger.js';
 
 export function createTool<T extends z.ZodSchema>(
   name: string,
   description: string,
   schema: T,
-  handler: (input: z.infer<T>) => Promise<unknown>,
+  handler: (input: z.infer<T>) => Promise<unknown>
 ): MCPTool {
   return {
     name,
@@ -14,11 +14,11 @@ export function createTool<T extends z.ZodSchema>(
     schema,
     handler: async (input: unknown) => {
       logger.debug('Executing MCP tool', { name, input });
-      
+
       try {
         const validatedInput = schema.parse(input);
         const result = await handler(validatedInput);
-        
+
         logger.debug('MCP tool executed successfully', { name, result });
         return result;
       } catch (error) {
@@ -61,7 +61,10 @@ export const AuthStatusSchema = z.object({});
 
 export const RepositoryListSchema = z.object({
   type: z.enum(['all', 'owner', 'member']).default('all').describe('Repository type filter'),
-  sort: z.enum(['created', 'updated', 'pushed', 'full_name']).default('updated').describe('Sort field'),
+  sort: z
+    .enum(['created', 'updated', 'pushed', 'full_name'])
+    .default('updated')
+    .describe('Sort field'),
   direction: z.enum(['asc', 'desc']).default('desc').describe('Sort direction'),
 });
 

@@ -19,7 +19,7 @@ export class GitHubToolHandler {
     this.registerHandler({
       name: 'github_auth_status',
       description: 'Check GitHub authentication status',
-      handle: async (request) => {
+      handle: async () => {
         logger.info('Checking GitHub authentication status');
 
         try {
@@ -46,7 +46,7 @@ export class GitHubToolHandler {
     this.registerHandler({
       name: 'server_status',
       description: 'Get MCP server status and information',
-      handle: async (request) => {
+      handle: async () => {
         logger.info('Getting server status');
 
         try {
@@ -75,7 +75,7 @@ export class GitHubToolHandler {
     this.registerHandler({
       name: 'config_validate',
       description: 'Validate MCP server configuration',
-      handle: async (request) => {
+      handle: async request => {
         logger.info('Validating configuration');
 
         try {
@@ -118,7 +118,7 @@ export class GitHubToolHandler {
       errors.push('Authentication configuration is required');
     } else {
       const { type } = config.auth;
-      
+
       if (!['oauth', 'pat', 'app'].includes(type)) {
         errors.push('Invalid authentication type. Must be oauth, pat, or app');
       }
@@ -185,18 +185,15 @@ export class GitHubToolHandler {
     const { method } = request;
 
     if (!method) {
-      throw errorHandler.createError(
-        ErrorCode.TASK_VALIDATION,
-        'Request method is required',
-      );
+      throw errorHandler.createError(ErrorCode.TASK_VALIDATION, 'Request method is required');
     }
 
     const handler = this.getHandler(method);
-    
+
     if (!handler) {
       throw errorHandler.createError(
         ErrorCode.TASK_VALIDATION,
-        `Unknown handler method: ${method}`,
+        `Unknown handler method: ${method}`
       );
     }
 
@@ -205,15 +202,15 @@ export class GitHubToolHandler {
     try {
       return await handler.handle(request);
     } catch (error) {
-      logger.error('Handler execution failed', { 
-        method, 
-        handler: handler.name, 
-        error: (error as Error).message 
+      logger.error('Handler execution failed', {
+        method,
+        handler: handler.name,
+        error: (error as Error).message,
       });
-      
-      throw errorHandler.handleError(error as Error, { 
-        method, 
-        handler: handler.name 
+
+      throw errorHandler.handleError(error as Error, {
+        method,
+        handler: handler.name,
       });
     }
   }

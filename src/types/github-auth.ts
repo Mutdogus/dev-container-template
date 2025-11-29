@@ -13,3 +13,13 @@ export interface GitHubPermission {
   granted: boolean;
   level: 'read' | 'write' | 'admin';
 }
+
+export interface OAuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  scope: string;
+  expires_in?: number;
+  refresh_token?: string;
+  error?: string;
+  error_description?: string;
+}

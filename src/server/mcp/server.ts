@@ -1,5 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { MCPTool } from '../../types/mcp-tool.js';
 import type { MCPServerConfiguration } from '../../types/mcp-config.js';
 import type { GitHubAuthentication } from '../../types/github-auth.js';
@@ -9,18 +10,16 @@ import {
   createGitHubIssueCreationTool,
   createGitHubIssueUpdateTool,
   createGitHubIssueGetTool,
-  createGitHubRepositoryListTool,
-  createGitHubRateLimitTool,
-  createSpeckitTaskConversionTool,
+  createGitHubIssueListTool,
 } from './tools/github-tools.js';
-import { GitHubToolHandler } from './handlers/index.js';
+
 import { logger } from '../../utils/logger.js';
 import { errorHandler, ErrorCode } from '../../utils/errors.js';
 
 export class MCPServer {
   private server: Server;
   private tools: Map<string, MCPTool> = new Map();
-  private handlers: GitHubToolHandler;
+
   private githubClient?: GitHubClient;
   private isRunning: boolean = false;
   private config?: MCPServerConfiguration;
@@ -35,16 +34,15 @@ export class MCPServer {
         capabilities: {
           tools: {},
         },
-      },
+      }
     );
 
-    this.handlers = new GitHubToolHandler();
     this.setupErrorHandling();
     this.setupToolHandlers();
   }
 
   private setupErrorHandling(): void {
-    this.server.onerror = (error) => {
+    this.server.onerror = error => {
       logger.error('MCP Server error', { error: error.message }, error);
     };
 
@@ -56,18 +54,18 @@ export class MCPServer {
 
   private setupToolHandlers(): void {
     // List available tools
-    this.server.setRequestHandler('tools/list', async () => {
-      const tools = Array.from(this.tools.values()).map((tool) => ({
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      const tools = Array.from(this.tools.values()).map(tool => ({
         name: tool.name,
         description: tool.description,
-        inputSchema: tool.schema as any,
+        inputSchema: tool.schema,
       }));
 
       return { tools };
     });
 
     // Execute a tool
-    this.server.setRequestHandler('tools/call', async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async request => {
       const { name, arguments: args } = request.params;
 
       if (!this.tools.has(name)) {
@@ -85,10 +83,10 @@ export class MCPServer {
       const tool = this.tools.get(name)!;
 
       try {
-        const result = await errorHandler.withErrorHandling(
-          () => tool.handler(args),
-          { toolName: name, args },
-        );
+        const result = await errorHandler.withErrorHandling(() => tool.handler(args), {
+          toolName: name,
+          args,
+        });
 
         return {
           content: [
@@ -118,17 +116,19 @@ export class MCPServer {
 
     try {
       this.config = config;
-      
+
       // Initialize GitHub client
-      await this.initializeGitHubClient(config.auth);
-      
+      if (config.auth) {
+        await this.initializeGitHubClient(config.auth);
+      }
+
       // Register GitHub tools
       this.registerGitHubTools();
-      
+
       logger.info('MCP server configured successfully', {
         serverName: config.serverName,
         toolCount: this.tools.size,
-        authType: config.auth.type,
+        authType: config.auth?.type || 'none',
       });
     } catch (error) {
       logger.error('Failed to configure MCP server', { config: config.serverName }, error as Error);
@@ -138,13 +138,10 @@ export class MCPServer {
 
   private async initializeGitHubClient(auth: GitHubAuthentication): Promise<void> {
     try {
-      if (auth.type === 'oauth' && (!auth.token || auth.clientId)) {
+      if (auth.type === 'oauth' && (!auth.token || !auth.clientId)) {
         // Initialize OAuth flow if needed
-        const oauthAuth = new GitHubOAuthAuth(
-          auth.clientId!,
-          auth.clientSecret!,
-        );
-        
+        // const oauthAuth = new GitHubOAuthAuth(auth.clientId!, auth.clientSecret!);
+
         // For now, we'll assume token is provided or use environment variables
         if (!auth.token) {
           logger.warn('OAuth token not provided, using environment variables');
@@ -152,7 +149,7 @@ export class MCPServer {
           if (!envAuth.valid) {
             throw errorHandler.createError(
               ErrorCode.AUTH_MISSING_CREDENTIALS,
-              'OAuth credentials not found in configuration or environment',
+              'OAuth credentials not found in configuration or environment'
             );
           }
         }
@@ -160,7 +157,7 @@ export class MCPServer {
 
       this.githubClient = new GitHubClient(auth);
       await this.githubClient.initialize();
-      
+
       logger.info('GitHub client initialized', { authType: auth.type });
     } catch (error) {
       logger.error('Failed to initialize GitHub client', { authType: auth.type }, error as Error);
@@ -170,23 +167,18 @@ export class MCPServer {
 
   private registerGitHubTools(): void {
     if (!this.githubClient) {
-      throw errorHandler.createError(
-        ErrorCode.SYSTEM_ERROR,
-        'GitHub client not initialized',
-      );
+      throw errorHandler.createError(ErrorCode.SYSTEM_ERROR, 'GitHub client not initialized');
     }
 
     const tools = [
       createGitHubIssueCreationTool(this.githubClient),
       createGitHubIssueUpdateTool(this.githubClient),
       createGitHubIssueGetTool(this.githubClient),
-      createGitHubRepositoryListTool(this.githubClient),
-      createGitHubRateLimitTool(this.githubClient),
-      createSpeckitTaskConversionTool(this.githubClient),
+      createGitHubIssueListTool(this.githubClient),
     ];
 
     tools.forEach(tool => this.registerTool(tool));
-    
+
     logger.info('Registered GitHub tools', { toolCount: tools.length });
   }
 
@@ -247,13 +239,19 @@ export class MCPServer {
     return this.isRunning;
   }
 
-  public getServerInfo(): { name: string; version: string; toolCount: number; configured: boolean; authType?: string } {
+  public getServerInfo(): {
+    name: string;
+    version: string;
+    toolCount: number;
+    configured: boolean;
+    authType?: string;
+  } {
     return {
       name: (this.server as any).name || 'github-speckit',
       version: (this.server as any).version || '1.0.0',
       toolCount: this.tools.size,
       configured: !!this.config,
-      authType: this.config?.auth.type,
+      authType: this.config?.auth?.type || 'none',
     };
   }
 

@@ -29,6 +29,7 @@ docker --version
 ## What's Included
 
 ### 1. OpenCode (TUI + GUI)
+
 - **OpenCode TUI**: Terminal-based AI coding agent
 - **OpenCode VS Code Extension**: GUI integration in VS Code Insiders
 - Works with local or remote LLM models
@@ -36,6 +37,7 @@ docker --version
 See [README-opencode.md](README-opencode.md) for detailed setup and usage.
 
 ### 2. Spec-Kit (Spec-Driven Development)
+
 - GitHub's toolkit for specification-driven development
 - AI-powered workflow to turn specs into working code
 - Supports OpenCode, Claude Code, GitHub Copilot, and more
@@ -43,11 +45,21 @@ See [README-opencode.md](README-opencode.md) for detailed setup and usage.
 See [README-spec-kit.md](README-spec-kit.md) for the full workflow guide.
 
 ### 3. Dev Containers
+
 - Python-based dev environment preconfigured with OpenCode
 - Cross-platform (macOS, Linux, Windows)
 - Reproducible environment for local and Proxmox-based development
+- **Fixed port conflicts** (3001, 8001, 5433) to avoid local service conflicts
+- **Removed GitHub CLI feature** that was causing build failures
 
-See [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json).
+See [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) for current configuration.
+
+**Recent Updates:**
+
+- ✅ Fixed VS Code container loading issues
+- ✅ Resolved port conflicts with local services
+- ✅ Removed problematic GitHub CLI feature
+- ✅ Container now builds and connects successfully
 
 ## Installation Features
 
@@ -59,6 +71,7 @@ The install wrapper (`configure-coding-environment.sh`) automatically runs these
 - **`scripts/configure-env.sh`** — Updates shell configuration (PATH for uv tools)
 
 Features:
+
 - ✅ Detects your OS (macOS, Debian/Ubuntu, Fedora/RHEL)
 - ✅ Installs Homebrew (macOS) or uses native package manager (Linux)
 - ✅ Installs Docker
@@ -98,17 +111,21 @@ personal/
 ## Next Steps
 
 1. **Run the setup wrapper** (first time only):
+
    ```bash
    bash configure-coding-environment.sh
    ```
+
    See [SESSION.md](SESSION.md) if issues occur.
 
 2. **Reload your shell**:
+
    ```bash
    exec zsh -l
    ```
 
 3. **Verify all tools**:
+
    ```bash
    opencode --version
    specify --version
@@ -122,6 +139,7 @@ personal/
    - **Option C**: Use Spec-Kit for structured, specification-driven development (recommended)
 
 5. **For Spec-Kit setup**:
+
    ```bash
    specify init my-project --ai opencode --script sh
    cd my-project
@@ -140,6 +158,7 @@ See [README-spec-kit.md](README-spec-kit.md) for full Spec-Driven Development wo
 See [SESSION.md](SESSION.md) for detailed troubleshooting of known issues.
 
 Quick fixes:
+
 - **Shell reload**: After running the script, reload your shell with `exec zsh -l`
 - **OpenCode not found**: Ensure `~/.zshrc` was updated; try `source ~/.zshrc` then `exec zsh -l`
 - **VS Code extension not installed**: Run `code-insiders --install-extension tanishqkancharla.opencode-vscode --force`

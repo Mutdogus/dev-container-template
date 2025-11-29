@@ -1,9 +1,0 @@
-winget install Microsoft.PowerShell
-winget install Microsoft.WindowsTerminal 
-winget install Postman.Postman
-winget install Notepad++.Notepad++
-winget install Microsoft.VisualStudioCode
-winget install Microsoft.Powertoys
-winget install VideoLAN.VLC
-winget install Microsoft.AzureCLI
-winget install GitHub.cli

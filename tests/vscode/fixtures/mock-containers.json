@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ms-vscode.cpptools",
+    "name": "C/C++",
+    "version": "1.0.0",
+    "publisher": "Microsoft",
+    "description": "C/C++ language support",
+    "categories": ["Programming Languages"],
+    "dependencies": [],
+    "compatibility": {
+      "minVersion": "1.85.0",
+      "maxVersion": null,
+      "issues": []
+    }
+  },
+  {
+    "id": "ms-python.python",
+    "name": "Python",
+    "version": "2023.0.0",
+    "publisher": "Microsoft",
+    "description": "Python language support",
+    "categories": ["Programming Languages"],
+    "dependencies": [],
+    "compatibility": {
+      "minVersion": "1.85.0",
+      "maxVersion": null,
+      "issues": []
+    }
+  },
+  {
+    "id": "ms-vscode.vscode-typescript-next",
+    "name": "TypeScript Next",
+    "version": "5.0.0",
+    "publisher": "Microsoft",
+    "description": "TypeScript language support (next)",
+    "categories": ["Programming Languages"],
+    "dependencies": [],
+    "compatibility": {
+      "minVersion": "1.85.0",
+      "maxVersion": null,
+      "issues": ["May have compatibility issues with certain TypeScript versions"]
+    }
+  },
+  {
+    "id": "github.copilot",
+    "name": "GitHub Copilot",
+    "version": "1.0.0",
+    "publisher": "GitHub",
+    "description": "AI-powered code completion",
+    "categories": ["Other"],
+    "dependencies": [],
+    "compatibility": {
+      "minVersion": "1.85.0",
+      "maxVersion": null,
+      "issues": ["Requires GitHub account", "May have performance impact"]
+    }
+  },
+  {
+    "id": "ms-vscode.opencode",
+    "name": "OpenCode",
+    "version": "1.0.0",
+    "publisher": "OpenCode",
+    "description": "OpenCode CLI integration",
+    "categories": ["Other"],
+    "dependencies": [],
+    "compatibility": {
+      "minVersion": "1.85.0",
+      "maxVersion": null,
+      "issues": []
+    }
+  }
+]
