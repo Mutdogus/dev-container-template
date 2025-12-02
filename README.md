@@ -163,13 +163,41 @@ See [README-spec-kit.md](README-spec-kit.md) for full Spec-Driven Development wo
 
 See [SESSION.md](SESSION.md) for detailed troubleshooting of known issues.
 
-Quick fixes:
+### Common Issues and Solutions
 
-- **Shell reload**: After running the script, reload your shell with `exec zsh -l`
-- **OpenCode not found**: Ensure `~/.zshrc` was updated; try `source ~/.zshrc` then `exec zsh -l`
+#### PATH Issues
+
+- **specify or opencode not found**: Tools install to `~/.local/bin` which may not be on PATH
+
+  ```bash
+  # Check if tools are installed but not on PATH
+  ls ~/.local/bin/specify ~/.local/bin/opencode
+
+  # Add to PATH (temporary)
+  export PATH="$HOME/.local/bin:$PATH"
+
+  # Add to PATH permanently (add to ~/.zshrc or ~/.bashrc)
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+  exec zsh -l
+  ```
+
+#### Shell Reload
+
+- **After installation**: Always reload your shell with `exec zsh -l`
+- **If commands not found**: Try `source ~/.zshrc` then `exec zsh -l`
+
+#### Tool-Specific Issues
+
+- **OpenCode not found**: Ensure `~/.zshrc` was updated; check `~/.opencode/bin/opencode`
 - **VS Code extension not installed**: Run `code-insiders --install-extension tanishqkancharla.opencode-vscode --force`
-- **specify not found**: Verify `uv` is installed with `uv --version` and on PATH; reload shell
+- **specify not found**: Verify `uv` is installed with `uv --version` and install with `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git`
 - **Docker not starting**: Manually start Docker Desktop (Applications folder)
+
+#### Dev Container Issues
+
+- **Container build fails**: Check Dockerfile for network issues during tool installation
+- **Tools not available in container**: Verify postCreateCommand runs successfully
+- **Port conflicts**: Container uses ports 3001, 8001, 5433 to avoid conflicts with local services
 
 ## Resources
 

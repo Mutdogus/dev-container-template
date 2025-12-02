@@ -26,7 +26,7 @@
     }
   },
   "forwardPorts": [3001, 8001, 5433],
-  "postCreateCommand": "echo 'Container ready for development' && opencode --version",
+  "postCreateCommand": "echo 'Container ready for development' && opencode --version && echo 'Verifying Spec-Kit installation...' && specify version && echo '✅ All tools ready for Spec-Driven Development'",
   "remoteUser": "vscode",
   "portsAttributes": {
     "3001": {

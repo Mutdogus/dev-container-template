@@ -40,7 +40,11 @@ RUN pip install --no-cache-dir \
 # Install additional Python development tools with uv
 RUN export PATH="/root/.local/bin:$PATH" \
     && /root/.local/bin/uv tool install ruff \
-    && /root/.local/bin/uv tool install mypy
+    && /root/.local/bin/uv tool install mypy \
+    && echo "Installing specify-cli for Spec-Driven Development..." \
+    && /root/.local/bin/uv tool install specify-cli --from git+https://github.com/github/spec-kit.git \
+    && echo "Verifying specify-cli installation..." \
+    && /root/.local/bin/uv tool list | grep specify
 
 # Layer 4: User configuration (changes rarely)
 ARG USERNAME=vscode
