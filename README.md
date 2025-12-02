@@ -1,6 +1,6 @@
 # Personal Coding Environment Setup
 
-This repository contains a portable, reproducible setup for AI-assisted development using OpenCode and Spec-Kit.
+This repository contains a portable, reproducible setup for AI-assisted development using OpenCode and Spec-Kit, made completly with opencode tui and the speckit workflow.
 
 ## Quick Start
 
